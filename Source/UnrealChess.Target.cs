@@ -8,6 +8,7 @@ public class UnrealChessTarget : TargetRules
 	public UnrealChessTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
+		DefaultBuildSettings = BuildSettingsVersion.V2;
 
 		ExtraModuleNames.AddRange( new string[] { "UnrealChess" } );
 	}
