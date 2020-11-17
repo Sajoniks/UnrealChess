@@ -1,67 +1,35 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "Chessboard.h"
-#include "MoveRules.h"
-#include "Templates/UnrealTemplate.h"
 
-UChessboard::UChessboard(const FObjectInitializer & ObjectInitializer)
+#include "Kismet/GameplayStatics.h"
+
+// Sets default values
+AChessboard::AChessboard()
 {
-	ReloadBoard(EGenerationType::DEFAULT);
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	TileSize = 250;
 }
 
-void UChessboard::ReloadBoard(EGenerationType GenerationType)
+// Called when the game starts or when spawned
+void AChessboard::BeginPlay()
 {
-	switch (GenerationType)
-	{
-		case EGenerationType::DEFAULT:
-		{
-			FString DefaultBoard[8][8] =
-			{
-				{ { "R" },{ "H" },{ "B" },{ "Q" },{ "K" },{ "B" },{ "H" },{ "R" } },
-				{ { "P" },{ "P" },{ "P" },{ "P" },{ "P" },{ "P" },{ "P" },{ "P" } },
-				{ { "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" } },
-				{ { "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" } },
-				{ { "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" } },
-				{ { "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" },{ "" } },
-				{ { "p" },{ "p" },{ "p" },{ "p" },{ "p" },{ "p" },{ "p" },{ "p" } },
-				{ { "r" },{ "h" },{ "b" },{ "q" },{ "k" },{ "b" },{ "h" },{ "r" } },
-			};
-			ConvertStringToBitboards(DefaultBoard, WP, WH, WB, WR, WK, WQ, BP, BH, BB, BR, BK, BQ);
-		}
-			break;
-
-		case EGenerationType::RANDOM:
-		{
-
-		}
-			break;
-
-		case EGenerationType::CHESS960:
-		{
-
-		}
-			break;
-	}
-}
-
-void UChessboard::ConvertStringToBitboards(const FString(&Board)[8][8], int64 & WP, int64 & WH, int64 & WB, int64 & WR, int64 & WK, int64 & WQ, int64 & BP, int64 & BH, int64 & BB, int64 & BR, int64 & BK, int64 & BQ)
-{
+	Super::BeginPlay();
 	
 }
 
-int64 UChessboard::ConvertStringToBit(const FString & String)
+AChessGameState* AChessboard::GetChessGameState() const
 {
-	int64 Base = 1;
-	int64 Result = 0;
+	return GetWorld() != nullptr ? Cast<AChessGameState>(GetWorld()->GetGameState()) : nullptr;
+}
 
-	for (int i = String.Len() - 1; i > 0; --i)
-	{
-		Result += Base*String[i];
-		Base *= 2;
-	}
+// Called every frame
+void AChessboard::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 
-	Result += (String[0] == '0' ? Base : -Base);
-
-	return Result;
 }
 
