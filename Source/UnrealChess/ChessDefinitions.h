@@ -8,7 +8,7 @@ UENUM(BlueprintType)
 //This enum represents which piece occupies the tile
 enum class ETileState : uint8
 {
-	Empty = 0,
+	Empty,
 	
 	WhitePawn,
 	WhiteKnight,
@@ -29,21 +29,21 @@ UENUM(BlueprintType)
 //First coordinate of the board tile
 enum class EBoardFile : uint8
 {
-	A = 0, B, C, D, E, F, G, H, None
+	A, B, C, D, E, F, G, H, None
 };
 
 UENUM(BlueprintType)
 //Second coordinate of the board tile
 enum class EBoardRank : uint8
 {
-	One = 0, Two, Three, Four, Five, Six, Seven, Eight, None
+	One, Two, Three, Four, Five, Six, Seven, Eight, None
 };
 
 UENUM(BlueprintType)
 //This enum represents chess pieces color group
 enum class EPieceColor : uint8
 {
-	White = 0,
+	White,
 	Black,
 	Both
 };
