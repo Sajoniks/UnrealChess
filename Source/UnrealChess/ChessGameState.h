@@ -5,13 +5,9 @@
 #include "ChessDefinitions.h"
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "ChessMoveRecord.h"
+
 #include "ChessGameState.generated.h"
-
-struct FMoveRecord
-{
-	
-};
-
 
 /**
  * 
@@ -62,7 +58,10 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	TStaticArray<int32, 3> MinorPieces;
 
 	uint64 PosHashKey;
+
+	//Tells which castle is available
+	int32 CastlePermission;
 	
 	//
-	TArray<FMoveRecord> History;
+	TArray<FChessMoveRecord> History;
 };
