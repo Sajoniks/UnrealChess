@@ -2,11 +2,3 @@
 
 
 #include "ChessMoveRecord.h"
-
-ChessMoveRecord::ChessMoveRecord()
-{
-}
-
-ChessMoveRecord::~ChessMoveRecord()
-{
-}
