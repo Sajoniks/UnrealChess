@@ -7,7 +7,10 @@
 
 AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 {
+	Bitboard = 0;
+	
 	MakeConverterArray_120To64();
+	MakeBitMasks();
 }
 
 void AChessGameState::MakeConverterArray_120To64()
@@ -29,20 +32,57 @@ void AChessGameState::MakeConverterArray_120To64()
 	const int32 MaxFile = static_cast<int32>(EBoardFile::H);
 
 	int32 TileAt64Array = 0;
-	
+
 	for (int32 r = MinRank; r <= MaxRank; ++r)
 	{
 		for (int32 f = MinFile; f <= MaxFile; ++f)
 		{
 			const EBoardRank CurrentRank = static_cast<EBoardRank>(r);
 			const EBoardFile CurrentFile = static_cast<EBoardFile>(f);
-			
+
 			int32 Tile = UChessGameStatics::GetTileIndexAt(CurrentFile, CurrentRank);
 
-			Array64To120Converter[TileAt64Array]	= Tile;
-			Array120To64Converter[Tile]				= TileAt64Array;
+			Array64To120Converter[TileAt64Array] = Tile;
+			Array120To64Converter[Tile] = TileAt64Array;
 
 			++TileAt64Array;
 		}
 	}
+}
+
+void AChessGameState::MakeBitMasks()
+{
+	for (int i = 0; i < 64; ++i)
+	{
+		SetMask[i] |= 0 << i;
+		ClearMask[i] = ~SetMask[i];
+	}
+}
+
+int32 AChessGameState::PopBit()
+{
+	uint64 TempBitboard = Bitboard ^ (Bitboard - 1);
+	uint32 Fold = (uint32)((TempBitboard & 0xffffffff) ^ (TempBitboard >> 32));
+	Bitboard &= (Bitboard - 1);
+
+	return BitTable[(Fold * 0x783a9b23) >> 26];
+}
+
+int32 AChessGameState::CountBits() const
+{
+	uint64 TempBitboard = Bitboard;
+	int32 Count;
+
+	for (Count = 0; TempBitboard; ++Count, TempBitboard &= TempBitboard - 1);
+	return Count;
+}
+
+void AChessGameState::ClearBit(int32 Tile)
+{
+	Bitboard &= ClearMask[Tile];
+}
+
+void AChessGameState::SetBit(int32 Tile)
+{
+	Bitboard |= SetMask[Tile];
 }
