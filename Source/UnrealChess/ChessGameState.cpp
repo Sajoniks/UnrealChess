@@ -11,6 +11,7 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	
 	MakeConverterArray_120To64();
 	MakeBitMasks();
+	MakeHashKeys();
 }
 
 void AChessGameState::MakeConverterArray_120To64()
@@ -59,6 +60,11 @@ void AChessGameState::MakeBitMasks()
 	}
 }
 
+void AChessGameState::MakeHashKeys()
+{
+	
+}
+
 int32 AChessGameState::PopBit()
 {
 	uint64 TempBitboard = Bitboard ^ (Bitboard - 1);
@@ -72,7 +78,7 @@ int32 AChessGameState::CountBits() const
 {
 	uint64 TempBitboard = Bitboard;
 	int32 Count;
-
+	
 	for (Count = 0; TempBitboard; ++Count, TempBitboard &= TempBitboard - 1);
 	return Count;
 }

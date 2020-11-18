@@ -98,6 +98,12 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	TStaticArray<uint64, 64> ClearMask{ 0 };
 
 	void MakeBitMasks();
+	
+	TStaticArray<TStaticArray<uint64, 120>, 13> PieceHashKeys;
+	TStaticArray<uint64, 16> CastleHashKeys;
+	uint64 SideHashKey;
+
+	void MakeHashKeys();
 
 	//Takes first bit, starting from the least significant bit, returns its index and sets it to zero
 	int32 PopBit();
