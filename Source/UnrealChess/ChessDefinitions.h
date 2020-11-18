@@ -61,3 +61,22 @@ enum class ETileCoord : uint8
 	A7 = 81, B7, C7, D7, E7, F7, G7, H7,
 	A8 = 91, B8, C8, D8, E8, F8, G8, H8, None
 };
+
+UENUM()
+//This enum represents castling type
+enum class ECastlingType : uint8
+{
+	WhiteKing = 1,
+	WhiteQueen = 2,
+	BlackKing = 4,
+	BlackQueen = 8
+};
+//Binary values of this enum are
+//1 0 0 0
+//0 1 0 0
+//0 0 1 0
+//0 0 0 1
+//This enum lets us know which castling is available by binary addition
+//Example
+//0 1 1 1
+//White Queen, Black King and Black Queen castling is available
