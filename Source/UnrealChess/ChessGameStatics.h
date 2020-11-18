@@ -22,7 +22,7 @@ public:
 	/**Get 120-tile array index from given rank and file
 	 * @param Rank Board rank
 	 * @param File Board file
-	 * @out Index of playable tile in 120-tiles array
+	 * @return Index of playable tile in 120-tiles array
 	 */
 	static int32 GetTileIndexAt(EBoardFile File, EBoardRank Rank);
 };
