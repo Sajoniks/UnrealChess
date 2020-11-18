@@ -3,8 +3,6 @@
 
 #include "Chessboard.h"
 
-#include "Kismet/GameplayStatics.h"
-
 // Sets default values
 AChessboard::AChessboard()
 {
