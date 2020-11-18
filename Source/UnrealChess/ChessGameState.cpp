@@ -62,7 +62,22 @@ void AChessGameState::MakeBitMasks()
 
 void AChessGameState::MakeHashKeys()
 {
+	//Just assign to all array values random value
 	
+	for (int i = 0; i < PieceHashKeys.Num(); ++i)
+	{
+		for (int j = 0; j < PieceHashKeys[i].Num(); ++i)
+		{
+			PieceHashKeys[i][j] = UChessGameStatics::GetRandom64();
+		}
+	}
+
+	SideHashKey = UChessGameStatics::GetRandom64();
+
+	for (int i = 0; i < CastleHashKeys.Num(); ++i)
+	{
+		CastleHashKeys[i] = UChessGameStatics::GetRandom64();
+	}
 }
 
 int32 AChessGameState::PopBit()

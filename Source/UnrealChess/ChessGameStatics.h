@@ -25,4 +25,9 @@ public:
 	 * @return Index of playable tile in 120-tiles array
 	 */
 	static int32 GetTileIndexAt(EBoardFile File, EBoardRank Rank);
+
+	/**Makes random unsigned 64 bit integer
+	 * @return Unsigned 64 bit integer
+	 */
+	static uint64 GetRandom64();
 };
