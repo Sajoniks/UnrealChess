@@ -79,8 +79,8 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 
 	void MakeConverterArray_120To64();
 
-	int32 GetTileAs64(int32 Tile120);
-	int32 GetTileAs120(int32 Tile64);
+	int32& GetTileAs64(int32 Tile120);
+	int32& GetTileAs120(int32 Tile64);
 
 	/****************************************************/
 
@@ -122,4 +122,8 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	void SetBit(int32 Tile);
 
 	uint64 GeneratePositionHashKey();
+
+	/**/
+
+	void ResetBoard();
 };
