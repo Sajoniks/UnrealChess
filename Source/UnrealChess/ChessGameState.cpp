@@ -51,6 +51,16 @@ void AChessGameState::MakeConverterArray_120To64()
 	}
 }
 
+int32 AChessGameState::GetTileAs64(int32 Tile120)
+{
+	return Array120To64Converter[Tile120];
+}
+
+int32 AChessGameState::GetTileAs120(int32 Tile64)
+{
+	return Array64To120Converter[Tile64];
+}
+
 void AChessGameState::MakeBitMasks()
 {
 	for (int i = 0; i < 64; ++i)

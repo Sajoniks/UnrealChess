@@ -72,11 +72,15 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	TArray<FChessMoveRecord> History;
 
 	/*Some helper arrays to handle 120-tile indexing and 64-tile indexing*/
-
+	/*Too low level, need refactor TODO*/
+	
 	TStaticArray<int32, 120> Array120To64Converter{ 0 };
 	TStaticArray<int32, 64> Array64To120Converter{ 0 };
 
 	void MakeConverterArray_120To64();
+
+	int32 GetTileAs64(int32 Tile120);
+	int32 GetTileAs120(int32 Tile64);
 
 	/****************************************************/
 
