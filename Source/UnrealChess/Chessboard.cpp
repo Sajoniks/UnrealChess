@@ -2,6 +2,7 @@
 
 
 #include "Chessboard.h"
+#include "ChessGameState.h"
 
 // Sets default values
 AChessboard::AChessboard()
