@@ -39,7 +39,7 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	EPieceColor Side;
 	
 	//Tile where en passant move is active
-	int32 EnPassantTile;
+	TOptional<int32> EnPassantTile;
 
 	//Counter that detects 50 move (100 half-move), when game is a draw
 	int32 FiftyMoveCounter;
@@ -116,4 +116,6 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 
 	//Sets bit to 1 at given tile
 	void SetBit(int32 Tile);
+
+	uint64 GeneratePositionHashKey();
 };

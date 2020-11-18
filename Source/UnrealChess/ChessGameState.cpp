@@ -107,3 +107,37 @@ void AChessGameState::SetBit(int32 Tile)
 {
 	Bitboard |= SetMask[Tile];
 }
+
+uint64 AChessGameState::GeneratePositionHashKey()
+{
+	uint64 ResultKey = 0;
+
+	for (int32 i = 0; i < Tiles.Num(); ++i)
+	{
+		//Tile is playable (in range)
+		if (static_cast<ETileCoord>(Tiles[i]) != ETileCoord::NoTile)
+		{
+			//Check it's (tile's) state
+			ETileState TileState = static_cast<ETileState>(Tiles[i]);
+
+			if (TileState != ETileState::NoPiece)
+			{
+				ResultKey ^= PieceHashKeys[Tiles[i]][i];
+			}
+		}
+	}
+
+	if (Side == EPieceColor::White)
+	{
+		ResultKey ^= SideHashKey;
+	}
+
+	//If en passant move available
+	if (EnPassantTile.IsSet())
+	{
+		ResultKey ^= PieceHashKeys[0][EnPassantTile.GetValue()];
+	}
+
+	ResultKey ^= CastleHashKeys[CastlePermission];
+	return ResultKey;
+}
