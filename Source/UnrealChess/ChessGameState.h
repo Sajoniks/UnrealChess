@@ -9,6 +9,8 @@
 
 #include "ChessGameState.generated.h"
 
+//TODO Try refactoring some field into player state
+
 /**
  * 
  */
@@ -64,4 +66,13 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	
 	//
 	TArray<FChessMoveRecord> History;
+
+	/*Some helper arrays to handle 120-tile indexing and 64-tile indexing*/
+
+	TStaticArray<int32, 120> Array120To64Converter;
+	TStaticArray<int32, 64> Array64To120Converter;
+
+	void MakeConverterArray_120To64();
+
+	/****************************************************/
 };
