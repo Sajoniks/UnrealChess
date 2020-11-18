@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 
-UENUM()
+UENUM(BlueprintType)
 //This enum represents which piece occupies the tile
 enum class ETileState : uint8
 {
-	Empty,
+	Empty = 0,
 	
 	WhitePawn,
 	WhiteKnight,
@@ -25,25 +25,25 @@ enum class ETileState : uint8
 	BlackKing	
 };
 
-UENUM()
+UENUM(BlueprintType)
 //First coordinate of the board tile
 enum class EBoardFile : uint8
 {
-	A, B, C, D, E, F, G, H, None
+	A = 0, B, C, D, E, F, G, H, None
 };
 
-UENUM()
+UENUM(BlueprintType)
 //Second coordinate of the board tile
 enum class EBoardRank : uint8
 {
-	One, Two, Three, Four, Five, Six, Seven, Eight, None
+	One = 0, Two, Three, Four, Five, Six, Seven, Eight, None
 };
 
-UENUM()
+UENUM(BlueprintType)
 //This enum represents chess pieces color group
 enum class EPieceColor : uint8
 {
-	White,
+	White = 0,
 	Black,
 	Both
 };
@@ -59,5 +59,5 @@ enum class ETileCoord : uint8
 	A5 = 61, B5, C5, D5, E5, F5, G5, H5,
 	A6 = 71, B6, C6, D6, E6, F6, G6, H6,
 	A7 = 81, B7, C7, D7, E7, F7, G7, H7,
-	A8 = 91, B8, C8, D8, E8, F8, G8, H8
+	A8 = 91, B8, C8, D8, E8, F8, G8, H8, None
 };
