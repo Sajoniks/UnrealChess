@@ -23,8 +23,8 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
 
 	//
-	static constexpr int TilesNum = 120;
-
+	TStaticArray<int32, 120> Tiles;
+	
 	//
 	TArray<FMoveRecord> History;
 };
