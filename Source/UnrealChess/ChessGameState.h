@@ -20,7 +20,15 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
+public:
+
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
+
+	void InitBoard(const FString& FEN);
+
+	void BeginPlay() override;
+	
+private:
 
 	//
 	uint64 Bitboard;
@@ -50,18 +58,18 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	//Black half-moves count
 	int32 HisPly;
 
-	//13 is a count of chess piece types by each color plus empty tiles count
 	//Total count of each chess piece, including empty tiles
+	//13 is a count of chess piece types by each color plus empty tiles count
 	TStaticArray<int32, 13> PieceCount{ 0 };
 
 	//Count of all non-pawn pieces
-	TStaticArray<int32, 3> BigPieces{ 0 };
+	TStaticArray<int32, 2> BigPieces{ 0 };
 
 	//Count of rooks, queens
-	TStaticArray<int32, 3> MajorPieces{ 0 };
+	TStaticArray<int32, 2> MajorPieces{ 0 };
 
 	//Count of bishops, knights
-	TStaticArray<int32, 3> MinorPieces{ 0 };
+	TStaticArray<int32, 2> MinorPieces{ 0 };
 
 	uint64 PosHashKey;
 
