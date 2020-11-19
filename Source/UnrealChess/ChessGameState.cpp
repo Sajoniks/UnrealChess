@@ -66,7 +66,7 @@ void AChessGameState::InitBoard(const FString& FEN)
 						case 'p': State = ETileState::BlackPawn; break;
 
 							//Piece count
-						case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
+						case'1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
 							//Get numeric value
 							//Example
 							//0 ascii is 48, char ascii is 56 (number 8)
@@ -130,6 +130,9 @@ void AChessGameState::InitBoard(const FString& FEN)
 
 				}
 			}
+
+			UE_LOG(LogGameState, Display, TEXT("Game state chess board was initialized."));
+			UE_LOG(LogGameState, Display, TEXT("Provided FEN: %s"), *FEN);
 		}
 	}
 }
