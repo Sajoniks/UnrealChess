@@ -7,8 +7,6 @@
 
 AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 {
-	Bitboard = 0;
-	
 	MakeConverterArray_120To64();
 	MakeBitMasks();
 	MakeHashKeys();
