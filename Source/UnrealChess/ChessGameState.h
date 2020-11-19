@@ -31,7 +31,7 @@ public:
 private:
 
 	//
-	uint64 Bitboard;
+	uint64 Bitboard = 0;
 
 	//All tiles
 	TStaticArray<int32, 120> Tiles{ 0 };
@@ -44,19 +44,19 @@ private:
 
 	//The side that needs to make a move
 	//TODO replace this enum
-	EPieceColor Side;
+	EPieceColor Side = EPieceColor::Both;
 	
 	//Tile where en passant move is active
-	TOptional<int32> EnPassantTile;
+	TOptional<int32> EnPassantTile = 0;
 
 	//Counter that detects 50 move (100 half-move), when game is a draw
-	int32 FiftyMoveCounter;
+	int32 FiftyMoveCounter = 0;
 	
 	//White half-moves count
-	int32 Ply;
+	int32 Ply = 0;
 	
 	//Black half-moves count
-	int32 HisPly;
+	int32 HisPly = 0;
 
 	//Total count of each chess piece, including empty tiles
 	//13 is a count of chess piece types by each color plus empty tiles count
@@ -71,10 +71,10 @@ private:
 	//Count of bishops, knights
 	TStaticArray<int32, 2> MinorPieces{ 0 };
 
-	uint64 PosHashKey;
+	uint64 PosHashKey = 0;
 
 	//Tells which castle is available
-	int32 CastlePermission;
+	int32 CastlePermission = 0;
 	
 	//
 	TArray<FChessMoveRecord> History;
@@ -111,9 +111,9 @@ private:
 
 	void MakeBitMasks();
 	
-	TStaticArray<TStaticArray<uint64, 120>, 13> PieceHashKeys;
-	TStaticArray<uint64, 16> CastleHashKeys;
-	uint64 SideHashKey;
+	TStaticArray<TStaticArray<uint64, 120>, 13> PieceHashKeys{TStaticArray<uint64, 120>{0}};
+	TStaticArray<uint64, 16> CastleHashKeys{0};
+	uint64 SideHashKey = 0;
 
 	void MakeHashKeys();
 
