@@ -202,7 +202,7 @@ void AChessGameState::MakeHashKeys()
 
 	for (int32 i = 0; i < PieceHashKeys.Num(); ++i)
 	{
-		for (int32 j = 0; j < PieceHashKeys[i].Num(); ++i)
+		for (int32 j = 0; j < PieceHashKeys[i].Num(); ++j)
 		{
 			PieceHashKeys[i][j] = UChessGameStatics::GetRandom64();
 		}
