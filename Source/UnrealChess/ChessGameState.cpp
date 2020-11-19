@@ -7,9 +7,10 @@
 
 AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 {
-	MakeConverterArray_120To64();
 	MakeBitMasks();
 	MakeHashKeys();
+
+	MakeConverterArray_120To64();
 }
 
 void AChessGameState::InitBoard(const FString& FEN)
@@ -27,7 +28,7 @@ void AChessGameState::InitBoard(const FString& FEN)
 			//Right part is a state description
 
 			//Remove whitespace
-			RightPart.TrimStartInline();
+			//RightPart.TrimStartInline();
 
 			//Firstly parse pieces
 			TArray<FString> Parsed;
@@ -74,7 +75,7 @@ void AChessGameState::InitBoard(const FString& FEN)
 							break;
 
 						default:
-							UE_LOG(LogGameState, Error, TEXT("Invalid FEN provided, board generation is impossible"));
+							UE_LOG(LogGameState, Error, TEXT("Invalid FEN provided, board generation is impossible. Falied at %s"));
 							return;
 						}
 
@@ -175,12 +176,12 @@ void AChessGameState::MakeConverterArray_120To64()
 	}
 }
 
-int32& AChessGameState::GetTileAs64(int32 Tile120)
+int32 AChessGameState::GetTileAs64(int32 Tile120)
 {
 	return Array120To64Converter[Tile120];
 }
 
-int32& AChessGameState::GetTileAs120(int32 Tile64)
+int32 AChessGameState::GetTileAs120(int32 Tile64)
 {
 	return Array64To120Converter[Tile64];
 }
@@ -287,7 +288,9 @@ void AChessGameState::ResetBoard()
 	//Playable tiles set to NoPiece
 	for (int32 i = 0; i < 64; ++i)
 	{
-		GetTileAs120(i) = static_cast<int32>(ETileState::NoPiece);
+		//Bug source
+		int32 Tile = GetTileAs120(i);
+		Tiles[Tile] = static_cast<int32>(ETileState::NoPiece);
 	}
 
 	//Reset all counters to 0

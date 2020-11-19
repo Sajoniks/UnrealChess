@@ -87,8 +87,8 @@ private:
 
 	void MakeConverterArray_120To64();
 
-	int32& GetTileAs64(int32 Tile120);
-	int32& GetTileAs120(int32 Tile64);
+	int32 GetTileAs64(int32 Tile120);
+	int32 GetTileAs120(int32 Tile64);
 
 	/****************************************************/
 
