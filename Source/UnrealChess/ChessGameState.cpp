@@ -189,7 +189,7 @@ int32& AChessGameState::GetTileAs120(int32 Tile64)
 
 void AChessGameState::MakeBitMasks()
 {
-	for (int i = 0; i < 64; ++i)
+	for (int32 i = 0; i < 64; ++i)
 	{
 		SetMask[i] |= 0 << i;
 		ClearMask[i] = ~SetMask[i];
@@ -199,10 +199,10 @@ void AChessGameState::MakeBitMasks()
 void AChessGameState::MakeHashKeys()
 {
 	//Just assign to all array values random value
-	
-	for (int i = 0; i < PieceHashKeys.Num(); ++i)
+
+	for (int32 i = 0; i < PieceHashKeys.Num(); ++i)
 	{
-		for (int j = 0; j < PieceHashKeys[i].Num(); ++i)
+		for (int32 j = 0; j < PieceHashKeys[i].Num(); ++i)
 		{
 			PieceHashKeys[i][j] = UChessGameStatics::GetRandom64();
 		}
@@ -210,7 +210,7 @@ void AChessGameState::MakeHashKeys()
 
 	SideHashKey = UChessGameStatics::GetRandom64();
 
-	for (int i = 0; i < CastleHashKeys.Num(); ++i)
+	for (int32 i = 0; i < CastleHashKeys.Num(); ++i)
 	{
 		CastleHashKeys[i] = UChessGameStatics::GetRandom64();
 	}
@@ -281,19 +281,19 @@ uint64 AChessGameState::GeneratePositionHashKey()
 void AChessGameState::ResetBoard()
 {
 	//Reset all tiles to NoTile
-	for (int i = 0; i < Tiles.Num(); ++i)
+	for (int32 i = 0; i < Tiles.Num(); ++i)
 	{
 		Tiles[i] = static_cast<int32>(ETileCoord::NoTile);
 	}
 
 	//Playable tiles set to NoPiece
-	for (int i = 0; i < 64; ++i)
+	for (int32 i = 0; i < 64; ++i)
 	{
 		GetTileAs120(i) = static_cast<int32>(ETileState::NoPiece);
 	}
 
 	//Reset all counters to 0
-	for (int i = 0; i < 3; ++i)
+	for (int32 i = 0; i < 3; ++i)
 	{
 		BigPieces[i] = 0;
 		MajorPieces[i] = 0;
@@ -302,7 +302,7 @@ void AChessGameState::ResetBoard()
 		Pawns[i] = 0;
 	}
 
-	for (int i = 0; i < PieceCount.Num(); ++i)
+	for (int32 i = 0; i < PieceCount.Num(); ++i)
 	{
 		PieceCount[i] = 0;
 	}
