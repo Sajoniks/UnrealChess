@@ -30,4 +30,11 @@ public:
 	 * @return Unsigned 64 bit integer
 	 */
 	static uint64 GetRandom64();
+
+	/**Parses board position from the string
+	 * @note InString must be typed as "<BoardFileBoardRank>"
+	 * @param InString String to parse
+	 * @out Tuple with two coords - file and rank
+	 */
+	static TPair<EBoardFile, EBoardRank> ParsePositionFromString(const FString& InString);
 };

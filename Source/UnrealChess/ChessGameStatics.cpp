@@ -27,8 +27,13 @@ uint64 UChessGameStatics::GetRandom64()
 {
 	return
 		(uint64)FMath::Rand() + 
-		(uint64)FMath::Rand() << 15 + 
-		(uint64)FMath::Rand() << 30 +
-		(uint64)FMath::Rand() << 45 +
-		((uint64)FMath::Rand() & 0xf) << 60;
+		((uint64)FMath::Rand() << 15) + 
+		((uint64)FMath::Rand() << 30) +
+		((uint64)FMath::Rand() << 45) +
+		(((uint64)FMath::Rand() & 0xf) << 60);
+}
+
+TPair<EBoardFile, EBoardRank> UChessGameStatics::ParsePositionFromString(const FString& InString)
+{
+	return MakeTuple(static_cast<EBoardFile>(InString[0] - L'a'), static_cast<EBoardRank>(InString[1] - L'1'));
 };
