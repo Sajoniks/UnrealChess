@@ -193,7 +193,7 @@ void AChessGameState::MakeBitMasks()
 {
 	for (int32 i = 0; i < 64; ++i)
 	{
-		SetMask[i] |= 0 << i;
+		SetMask[i] |= 1 << i;
 		ClearMask[i] = ~SetMask[i];
 	}
 }
