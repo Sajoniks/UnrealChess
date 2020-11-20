@@ -2,6 +2,7 @@
 
 
 #include "ChessGameState.h"
+#include "Engine/DataTable.h"
 
 #include "ChessGameStatics.h"
 
@@ -16,7 +17,7 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 
 	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_ChessPieceCost.DT_ChessPieceCost'"));
+	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_ChessPieceInfo.DT_ChessPieceInfo'"));
 	CostDT = DTFinder.Object;
 }
 
