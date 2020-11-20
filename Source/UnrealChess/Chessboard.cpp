@@ -46,6 +46,11 @@ FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 	return Pos + FL;
 }
 
+TOptional<FVector> AChessboard::GetTileCenter(float X, float Y)
+{
+	return TOptional<FVector>();
+}
+
 // Called when the game starts or when spawned
 void AChessboard::BeginPlay()
 {
