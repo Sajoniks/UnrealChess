@@ -26,6 +26,9 @@ public:
 
 	void InitBoard(const FString& FEN);
 
+	UFUNCTION(BlueprintCallable, Category="Get")
+	ETileState GetPieceAtTile(EBoardFile File, EBoardRank Rank) const;
+
 	void BeginPlay() override;
 	
 private:

@@ -81,7 +81,7 @@ void AChessGameState::InitBoard(const FString& FEN)
 
 						for (int32 i = 0; i < Count; ++i)
 						{
-							int32 Tile64 = (int32)Rank * 8 + (int32)File;
+							int32 Tile64 = UChessGameStatics::GetTileIndexAt_64(File, Rank);
 							int32 Tile120 = GetTileAs120(Tile64);
 
 							if (State != ETileState::NoPiece)
@@ -136,6 +136,12 @@ void AChessGameState::InitBoard(const FString& FEN)
 		}
 	}
 }
+
+ETileState AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank) const
+{
+	return static_cast<ETileState>(Tiles[UChessGameStatics::GetTileIndexAt(File, Rank)]);
+}
+
 
 void AChessGameState::BeginPlay()
 {
@@ -193,7 +199,7 @@ void AChessGameState::MakeBitMasks()
 {
 	for (int32 i = 0; i < 64; ++i)
 	{
-		SetMask[i] |= 1 << i;
+		SetMask[i] |= uint64(1) << i;
 		ClearMask[i] = ~SetMask[i];
 	}
 }
