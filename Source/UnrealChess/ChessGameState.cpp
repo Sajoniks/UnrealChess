@@ -5,12 +5,16 @@
 
 #include "ChessGameStatics.h"
 
+//TODO
+//Think about InitBoard location
 AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 {
 	MakeBitMasks();
 	MakeHashKeys();
 
 	MakeConverterArray_120To64();
+
+	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 void AChessGameState::InitBoard(const FString& FEN)
@@ -145,7 +149,7 @@ ETileState AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank) con
 
 void AChessGameState::BeginPlay()
 {
-	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	
 }
 
 void AChessGameState::MakeConverterArray_120To64()
