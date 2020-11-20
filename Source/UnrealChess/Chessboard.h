@@ -4,6 +4,9 @@
 #include "GameFramework/Actor.h"
 #include "Chessboard.generated.h"
 
+enum class EBoardFile : uint8;
+enum class EBoardRank : uint8;
+
 class AChessGameState;
 
 /*
@@ -14,23 +17,36 @@ UCLASS(Blueprintable)
 class UNREALCHESS_API AChessboard : public AActor
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, Instanced, Category="Appearence")
+	UStaticMeshComponent* BoardMesh;
 	
 public:
 	
 	// Sets default values for this actor's properties
 	AChessboard();
 
+	FVector GetTileCenter(EBoardFile File, EBoardRank Rank) const;
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearence", meta=(ClampMin="10"))
 	//Size of the side of the tile in uu
 	int32 TileSize;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Gameplay")
+	FVector CornerLocation;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	//
-	FORCEINLINE AChessGameState* GetChessGameState() const;
+	UFUNCTION(BlueprintCallable, Category="Get")
+	AChessGameState* GetChessGameState() const;
+
+	void DrawDebug();
+
+	void OnConstruction(const FTransform& Transform) override;
 	
 public:	
 	// Called every frame

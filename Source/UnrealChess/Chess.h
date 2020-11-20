@@ -9,6 +9,7 @@
 
 #include "Chess.generated.h"
 
+enum class ETileState : unsigned char;
 class UDataTable;
 
 USTRUCT(BlueprintType)
@@ -69,6 +70,9 @@ public:
 	EChessPieceColor ChessColor;
 
 	void OnConstruction(const FTransform& Transform) override;
+
+	//TODO
+	void InitFromState(ETileState State);
 
 protected:
 	// Called when the game starts or when spawned
