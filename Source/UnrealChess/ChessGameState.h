@@ -142,6 +142,8 @@ private:
 	//Cached values of ranks and files
 	TStaticArray<EBoardFile, 120> BoardFiles;
 	TStaticArray<EBoardRank, 120> BoardRanks;
+
+	void MakeFilesRanksArrays();
 	
 	/**/
 
