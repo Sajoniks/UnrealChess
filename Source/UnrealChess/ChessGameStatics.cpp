@@ -8,6 +8,11 @@ int32 UChessGameStatics::GetTileIndexAt(EBoardFile File, EBoardRank Rank)
 	return static_cast<int32>(File) + 21 + static_cast<int32>(Rank) * 10;
 }
 
+int32 UChessGameStatics::GetTileIndexAt_64(EBoardFile File, EBoardRank Rank)
+{
+	return (int32)Rank * 8 + (int32)File;
+}
+
 //Order of processing
 //
 //Assume we have 64bit integer

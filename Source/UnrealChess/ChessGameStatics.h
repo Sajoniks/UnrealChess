@@ -26,6 +26,14 @@ public:
 	 */
 	static int32 GetTileIndexAt(EBoardFile File, EBoardRank Rank);
 
+	UFUNCTION(BlueprintCallable, Category = "Utility")
+	/**Converts File and Rank to 64-size array index
+	 * @param File Board file
+	 * @param Rank Board rank
+	 * @return Integer in range 0<=i<64
+	 */
+	static int32 GetTileIndexAt_64(EBoardFile File, EBoardRank Rank);
+
 	/**Makes random unsigned 64 bit integer
 	 * @return Unsigned 64 bit integer
 	 */
