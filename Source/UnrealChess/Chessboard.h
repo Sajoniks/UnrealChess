@@ -27,10 +27,22 @@ class UNREALCHESS_API AChessboard : public AActor
 	
 public:
 	
-	// Sets default values for this actor's properties
+	//Sets default values for this actor's properties
 	AChessboard();
 
+	/** Get world tile center location
+	 * @param File File coordinate of the board
+	 * @param Rank Rank coordinate of the board
+	 * @return Location of the center of the tile, in world space
+	 */
 	FVector GetTileCenter(EBoardFile File, EBoardRank Rank) const;
+
+	/** Get world tile center location
+	 * @param X World X-coordinate
+	 * @param Y World Y-coordinate
+	 * @return Location of the center of the tile, in world space (if found)
+	 */
+	TOptional<FVector> GetTileCenter(float X, float Y);
 
 protected:
 
