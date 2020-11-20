@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataTableEditor/Private/SRowEditor.h"
 
 UENUM(BlueprintType)
 //This enum represents which piece occupies the tile

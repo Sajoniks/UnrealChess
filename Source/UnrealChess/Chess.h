@@ -30,25 +30,6 @@ struct FChessMaterialPath : public FTableRowBase
 	UMaterialInstance* Material;
 };
 
-
-USTRUCT(BlueprintType)
-struct FChessPieceInfo : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Cost;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsMinor;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsMajor;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsBig;
-};
-
 UENUM(BlueprintType)
 enum class EChessPieceRole : uint8
 {

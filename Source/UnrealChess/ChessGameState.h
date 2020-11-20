@@ -11,6 +11,15 @@
 
 class UDataTable;
 
+USTRUCT(BlueprintType)
+struct FChessPieceCost : FTableRowBase
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float Cost;
+};
+
 //TODO Try refactoring some field into player state
 //TODO JUST REFACTOR THIS CRAP
 
@@ -79,6 +88,31 @@ private:
 	//Count of bishops, knights
 	TStaticArray<int32, 2> MinorPieces{ 0 };
 
+	//
+	TStaticArray<int32, 2> Material;
+
+	//Hard-coded values that defines piece majority
+	TArray<bool, TFixedAllocator<13>> IsBig { false, false, true, true, true, true, true, false, true, true, true, true, true };
+	TArray<bool, TFixedAllocator<13>> IsMaj { false, false, false, false, true, true, true, false, false, false, true, true, true };
+	TArray<bool, TFixedAllocator<13>> IsMin { false, false, true, true, false, false, false, false, true, true, false, false, false };
+
+	//Hard-coded pieces cost
+	TArray<int32, TFixedAllocator<13>> PieceCost { 0, 100, 325, 325, 550, 1000, 50000, 100, 325, 325, 550, 1000, 50000 };
+	
+	//Hard-coded colors
+	TArray<EPieceColor, TFixedAllocator<13>> PieceColor {
+		
+		EPieceColor::Both,
+		
+		EPieceColor::White, EPieceColor::White, EPieceColor::White, EPieceColor::White, EPieceColor::White, EPieceColor::White,
+		EPieceColor::Black, EPieceColor::Black, EPieceColor::Black, EPieceColor::Black, EPieceColor::Black, EPieceColor::Black
+		
+	};
+
+	
+	
+	void UpdateListsMaterial();
+
 	uint64 PosHashKey = 0;
 
 	//Tells which castle is available
@@ -101,9 +135,14 @@ private:
 	/****************************************************/
 
 	//For faster move generation
-	//TODO add piece list
-	//
+	//Piece list
+	TStaticArray<TStaticArray<int32, 13>, 10> PieceList{ TStaticArray<int32, 13>{0} };
 
+
+	//Cached values of ranks and files
+	TStaticArray<EBoardFile, 120> BoardFiles;
+	TStaticArray<EBoardRank, 120> BoardRanks;
+	
 	/**/
 
 	//See definition on www.chessprogrammingwiki.com

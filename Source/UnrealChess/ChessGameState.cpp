@@ -14,9 +14,12 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	MakeHashKeys();
 
 	MakeConverterArray_120To64();
-
+	MakeFilesRanksArrays();
+	
 	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	UpdateListsMaterial();
 
+	//TODO
 	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_ChessPieceInfo.DT_ChessPieceInfo'"));
 	CostDT = DTFinder.Object;
 }
@@ -156,6 +159,49 @@ void AChessGameState::BeginPlay()
 	
 }
 
+void AChessGameState::UpdateListsMaterial()
+{
+	for (int32 i = 0; i < Tiles.Num(); ++i)
+	{
+		int32 Tile = i;
+		int32 Color = 0;
+		
+		ETileCoord Coord = static_cast<ETileCoord>(Tiles[i]);
+		
+		if (Coord != ETileCoord::NoTile)
+		{
+			ETileState State = static_cast<ETileState>(Tiles[i]);
+			if (State != ETileState::NoPiece)
+			{
+				Color = Tiles[i];
+				
+				if (IsBig[Tiles[i]])
+					BigPieces[Color]++;
+
+				if (IsMaj[Tiles[i]])
+					MajorPieces[Color]++;
+
+				if (IsMin[Tiles[i]])
+					MinorPieces[Color]++;
+
+				Material[Color] += PieceCost[Tiles[i]];
+				PieceList[Tiles[i]][PieceCount[Tiles[i]]] = Tile;
+				PieceCount[Tiles[i]]++;
+
+				if (State == ETileState::WhiteKing)
+				{
+					Kings[(int32)EPieceColor::White] = Tile;
+				}
+
+				if (State == ETileState::BlackKing)
+				{
+					Kings[(int32)EPieceColor::Black] = Tile;
+				}
+			}
+		}
+	}
+}
+
 void AChessGameState::MakeConverterArray_120To64()
 {
 	for (int32 i = 0; i < 120; ++i)
@@ -201,6 +247,34 @@ int32 AChessGameState::GetTileAs64(int32 Tile120)
 int32 AChessGameState::GetTileAs120(int32 Tile64)
 {
 	return Array64To120Converter[Tile64];
+}
+
+void AChessGameState::MakeFilesRanksArrays()
+{
+	for (int32 i = 0; i < 120; ++i)
+	{
+		BoardFiles[i] = EBoardFile::None;
+		BoardRanks[i] = EBoardRank::None;
+	}
+
+	int32 MinRank = (int32)EBoardRank::One;
+	int32 MaxRank = (int32)EBoardRank::Eight;
+
+	int32 MinFile = (int32)EBoardFile::A;
+	int32 MaxFile = (int32)EBoardFile::H;
+
+	for (int32 i = MinRank; i <= MaxRank; ++i)
+	{
+		for (int32 j = MinFile; j <= MaxFile; ++j)
+		{
+			EBoardFile File = static_cast<EBoardFile>(j);
+			EBoardRank Rank = static_cast<EBoardRank>(i);
+
+			int32 Tile = UChessGameStatics::GetTileIndexAt(File, Rank);
+			BoardFiles[Tile] = File;
+			BoardRanks[Tile] = Rank;
+		}
+	}
 }
 
 void AChessGameState::MakeBitMasks()
