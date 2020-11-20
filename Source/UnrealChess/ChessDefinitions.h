@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "DataTableEditor/Private/SRowEditor.h"
 
+#include "ChessDefinitions.generated.h"
+
 UENUM(BlueprintType)
 //This enum represents which piece occupies the tile
 enum class ETileState : uint8
@@ -26,6 +28,8 @@ enum class ETileState : uint8
 	BlackKing	
 };
 
+
+
 UENUM(BlueprintType)
 //First coordinate of the board tile
 enum class EBoardFile : uint8
@@ -46,8 +50,69 @@ enum class EPieceColor : uint8
 {
 	White,
 	Black,
-	Both
+	Both,
+	NoColor
 };
+
+
+class UNREALCHESS_API FChessPiece
+{
+	bool bIsBig;
+	bool bIsMajor;
+	bool bIsMinor;
+
+	int32 Cost;
+	EPieceColor Color;
+
+	ETileState State;
+
+public:
+
+	FChessPiece() = default;
+	
+	FChessPiece(EPieceColor Color, ETileState State, bool bIsBig, bool bIsMaj, bool bIsMin, int32 Cost):
+		bIsBig(bIsBig), bIsMajor(bIsMaj), bIsMinor(bIsMin), Cost(Cost), Color(Color), State(State) {}
+
+	bool operator==(const FChessPiece& Other) const;
+	bool operator!=(const FChessPiece& Other) const;
+
+	FORCEINLINE int32 GetCode() const;
+	FORCEINLINE int32 GetCost() const;
+
+	FORCEINLINE ETileState GetEnum() const;
+	FORCEINLINE EPieceColor GetColor() const;
+	FORCEINLINE int32 GetColorCode() const;
+
+	FORCEINLINE bool IsBigPiece() const;
+	FORCEINLINE bool IsMajorPiece() const;
+	FORCEINLINE bool isMinorPiece() const;
+
+	static FChessPiece GetPieceFromChar(TCHAR Char);
+};
+
+/****Predefined pieces constants****/
+/****************************/
+extern const FChessPiece EmptyChessPiece;
+
+extern const FChessPiece WhitePawn;
+extern const FChessPiece BlackPawn;
+
+extern const FChessPiece WhiteKnight;
+extern const FChessPiece BlackKnight;
+
+extern const FChessPiece WhiteBishop;
+extern const FChessPiece BlackBishop;
+
+extern const FChessPiece WhiteRook;
+extern const FChessPiece BlackRook;
+
+extern const FChessPiece WhiteQueen;
+extern const FChessPiece BlackQueen;
+
+extern const FChessPiece BlackKing;
+extern const FChessPiece WhiteKing;
+/****************************/
+
 
 UENUM()
 //This enum represents tile coordinate
@@ -61,6 +126,114 @@ enum class ETileCoord : uint8
 	A6 = 71, B6, C6, D6, E6, F6, G6, H6,
 	A7 = 81, B7, C7, D7, E7, F7, G7, H7,
 	A8 = 91, B8, C8, D8, E8, F8, G8, H8, NoTile
+};
+
+class UNREALCHESS_API FTileCoordinate
+{
+	ETileCoord Coordinate;
+
+	EBoardRank Rank;
+	EBoardFile File;
+
+public:
+
+	FTileCoordinate():
+		Coordinate(ETileCoord::NoTile), Rank(EBoardRank::None), File(EBoardFile::None) {}
+
+	FTileCoordinate(ETileCoord Combined):
+		Coordinate(Combined), Rank(), File()
+	{
+		int32 Index = (int32)Combined;
+
+		if (FMath::IsWithinInclusive(Index, 21, 28))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 31, 38))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 41, 48))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 51, 58))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 61, 68))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 71, 78))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 81, 88))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+
+		if (FMath::IsWithinInclusive(Index, 91, 98))
+		{
+			Rank = EBoardRank::One;
+			File = static_cast<EBoardFile>(Index);
+		}
+	}
+
+	FTileCoordinate(EBoardFile File, EBoardRank Rank):
+	Coordinate(), Rank(Rank), File(File)
+	{
+	}
+
+	FORCEINLINE ETileCoord GetPosition() const;
+	FORCEINLINE EBoardFile GetFile() const;
+	FORCEINLINE EBoardRank GetRank() const;
+
+	FORCEINLINE bool IsValid() const;
+
+	static EBoardRank ToRank(int32 Int)
+	{
+		return static_cast<EBoardRank>(Int);
+	}
+
+	static EBoardFile ToFile(int32 Int)
+	{
+		return static_cast<EBoardFile>(Int);
+	}
+
+	static int32 GetMinRankIndex()
+	{
+		return (int32)EBoardRank::One;
+	}
+
+	static int32 GetMaxRankIndex()
+	{
+		return (int32)EBoardRank::Eight;
+	}
+
+	static int32 GetMinFileIndex()
+	{
+		return(int32)EBoardFile::A;
+	}
+
+	static int32 GetMaxFileIndex()
+	{
+		return (int32)EBoardFile::H;
+	}
 };
 
 UENUM()

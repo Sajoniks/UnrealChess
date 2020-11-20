@@ -63,7 +63,7 @@ void AChessboard::BeginPlay()
 			auto X = static_cast<EBoardRank>(i);
 			auto Y = static_cast<EBoardFile>(j);
 
-			ETileState State = GetChessGameState()->GetPieceAtTile(Y, X);
+			ETileState State = GetChessGameState()->GetPieceAtTile(Y, X).GetEnum();
 
 			//TODO
 			if (State != ETileState::NoPiece)

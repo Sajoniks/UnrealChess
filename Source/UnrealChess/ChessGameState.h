@@ -12,7 +12,7 @@
 class UDataTable;
 
 USTRUCT(BlueprintType)
-struct FChessPieceCost : FTableRowBase
+struct FChessPieceCost : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -22,6 +22,104 @@ struct FChessPieceCost : FTableRowBase
 
 //TODO Try refactoring some field into player state
 //TODO JUST REFACTOR THIS CRAP
+
+class FChessTileState
+{
+	FChessPiece ChessPiece;
+
+public:
+
+	FChessTileState() = default;
+
+	FORCEINLINE FChessPiece& GetChessPiece() 
+	{
+		return ChessPiece;
+	}
+
+	FORCEINLINE void SetPiece(const FChessPiece& Piece) 
+	{
+		ChessPiece = Piece;
+	}
+
+	FORCEINLINE void ClearTile()
+	{
+		ChessPiece = EmptyChessPiece;
+	}
+
+	FORCEINLINE bool IsEmpty() const
+	{
+		return ChessPiece == EmptyChessPiece;
+	}
+};
+
+class FChessBoardTile
+{
+	//State of tile
+	FChessTileState State;
+
+	//Coords
+	FTileCoordinate Coords;
+
+public:
+
+	FChessBoardTile() = default;
+
+	FORCEINLINE void Reset()
+	{
+		State.ClearTile();
+		Coords = {};
+	}
+
+	FORCEINLINE FChessTileState& GetState()
+	{
+		return State;
+	}
+
+	//Get combined tile position
+	FORCEINLINE FTileCoordinate& GetPosition()
+	{
+		return Coords;
+	}
+
+	FORCEINLINE void SetPosition(const FTileCoordinate& Coordinate)
+	{
+		Coords = Coordinate;
+	}
+
+	FORCEINLINE void SetPosition(const EBoardFile& File, const EBoardRank& Rank)
+	{
+		SetPosition({File, Rank});
+	}
+
+	//Converted file coordinate to int32
+	FORCEINLINE int32 GetFileAsInt() const { return (int32)Coords.GetFile(); }
+
+	//Converted rank coordinate to int32
+	FORCEINLINE int32 GetRankAsInt() const { return (int32)Coords.GetRank(); }
+
+	//Piece code
+	FORCEINLINE int32 GetPieceAsInt() { return State.GetChessPiece().GetCode(); }
+
+	//Color code
+	FORCEINLINE int32 GetColorAsInt(){ return State.GetChessPiece().GetColorCode(); }
+
+	//Check if tile has given Piece (not empty and equal to it)
+	FORCEINLINE bool HasPiece(const FChessPiece& Piece)
+	{
+		return !IsOffboard() && !IsEmpty() && State.GetChessPiece() == Piece;
+	}
+
+	//Check if this tile is not playable
+	FORCEINLINE bool IsOffboard() const
+	{
+		return Coords.IsValid();
+	}
+
+	FORCEINLINE bool IsEmpty() const
+	{
+		return State.IsEmpty();
+	}
+};
 
 /**
  * 
@@ -40,8 +138,8 @@ public:
 
 	void InitBoard(const FString& FEN);
 
-	UFUNCTION(BlueprintCallable, Category="Get")
-	ETileState GetPieceAtTile(EBoardFile File, EBoardRank Rank) const;
+	//UFUNCTION(BlueprintCallable, Category="Get")
+	FChessPiece& GetPieceAtTile(EBoardFile File, EBoardRank Rank);
 
 	void BeginPlay() override;
 	
@@ -51,7 +149,7 @@ private:
 	uint64 Bitboard = 0;
 
 	//All tiles
-	TStaticArray<int32, 120> Tiles{ 0 };
+	TStaticArray<FChessBoardTile, 120> Tiles{ };
 
 	//Pawns locations
 	TStaticArray<uint64, 3> Pawns{ 0 };

@@ -17,7 +17,7 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	MakeFilesRanksArrays();
 	
 	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-	UpdateListsMaterial();
+	//UpdateListsMaterial();
 
 	//TODO
 	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_ChessPieceInfo.DT_ChessPieceInfo'"));
@@ -55,27 +55,10 @@ void AChessGameState::InitBoard(const FString& FEN)
 					{//Number of pieces encoded in single character
 						int32 Count = 1;
 
-						//Piece encoded in character
-						ETileState State = ETileState::NoPiece;
+						FChessPiece Piece = FChessPiece::GetPieceFromChar(Char);
 
 						switch (Char)
 						{
-							//White pieces
-						case 'K': State = ETileState::WhiteKing; break;
-						case 'Q': State = ETileState::WhiteQueen; break;
-						case 'R': State = ETileState::WhiteRook; break;
-						case 'B': State = ETileState::WhiteBishop; break;
-						case 'N': State = ETileState::WhiteKnight; break;
-						case 'P': State = ETileState::WhitePawn; break;
-
-							//Black pieces
-						case 'k': State = ETileState::BlackKing; break;
-						case 'q': State = ETileState::BlackQueen; break;
-						case 'r': State = ETileState::BlackRook; break;
-						case 'b': State = ETileState::BlackBishop; break;
-						case 'n': State = ETileState::BlackKnight; break;
-						case 'p': State = ETileState::BlackPawn; break;
-
 							//Piece count
 						case'1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
 							//Get numeric value
@@ -84,10 +67,6 @@ void AChessGameState::InitBoard(const FString& FEN)
 							//56-48 = 8
 							Count = Char - L'0';
 							break;
-
-						default:
-							UE_LOG(LogGameState, Error, TEXT("Invalid FEN provided, board generation is impossible. Falied at %s"));
-							return;
 						}
 
 						for (int32 i = 0; i < Count; ++i)
@@ -95,11 +74,8 @@ void AChessGameState::InitBoard(const FString& FEN)
 							int32 Tile64 = UChessGameStatics::GetTileIndexAt_64(File, Rank);
 							int32 Tile120 = GetTileAs120(Tile64);
 
-							if (State != ETileState::NoPiece)
-							{
-								//TODO
-								Tiles[Tile120] = (int32)State;
-							}
+							Tiles[Tile120].GetState().SetPiece(Piece);
+							Tiles[Tile120].SetPosition(File, Rank);
 
 							File = static_cast<EBoardFile>((int32)File + 1);
 						}
@@ -148,9 +124,9 @@ void AChessGameState::InitBoard(const FString& FEN)
 	}
 }
 
-ETileState AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank) const
+FChessPiece& AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank)
 {
-	return static_cast<ETileState>(Tiles[UChessGameStatics::GetTileIndexAt(File, Rank)]);
+	return Tiles[UChessGameStatics::GetTileIndexAt(File, Rank)].GetState().GetChessPiece();
 }
 
 
@@ -164,39 +140,27 @@ void AChessGameState::UpdateListsMaterial()
 	for (int32 i = 0; i < Tiles.Num(); ++i)
 	{
 		int32 Tile = i;
-		int32 Color = 0;
+		FChessPiece ChessPiece = Tiles[i].GetState().GetChessPiece();
 		
-		ETileCoord Coord = static_cast<ETileCoord>(Tiles[i]);
-		
-		if (Coord != ETileCoord::NoTile)
+		if (!Tiles[i].IsOffboard())
 		{
-			ETileState State = static_cast<ETileState>(Tiles[i]);
-			if (State != ETileState::NoPiece)
+			if (!Tiles[i].IsEmpty())
 			{
-				Color = Tiles[i];
+				int32 ColorCode = ChessPiece.GetColorCode();
 				
-				if (IsBig[Tiles[i]])
-					BigPieces[Color]++;
+				if (ChessPiece.IsBigPiece())
+					BigPieces[ColorCode]++;
 
-				if (IsMaj[Tiles[i]])
-					MajorPieces[Color]++;
+				if (ChessPiece.IsMajorPiece())
+					MajorPieces[ColorCode]++;
 
-				if (IsMin[Tiles[i]])
-					MinorPieces[Color]++;
+				if (ChessPiece.isMinorPiece())
+					MinorPieces[ColorCode]++;
 
-				Material[Color] += PieceCost[Tiles[i]];
-				PieceList[Tiles[i]][PieceCount[Tiles[i]]] = Tile;
-				PieceCount[Tiles[i]]++;
+				Material[ColorCode] += ChessPiece.GetCost();
+				PieceCount[Tiles[i].GetPieceAsInt()]++;
 
-				if (State == ETileState::WhiteKing)
-				{
-					Kings[(int32)EPieceColor::White] = Tile;
-				}
-
-				if (State == ETileState::BlackKing)
-				{
-					Kings[(int32)EPieceColor::Black] = Tile;
-				}
+				//TODO
 			}
 		}
 	}
@@ -214,20 +178,20 @@ void AChessGameState::MakeConverterArray_120To64()
 		Array64To120Converter[i] = 120;
 	}
 
-	const int32 MinRank = static_cast<int32>(EBoardRank::One);
-	const int32 MaxRank = static_cast<int32>(EBoardRank::Eight);
+	const int32 MinRank = FTileCoordinate::GetMinRankIndex();
+	const int32 MaxRank = FTileCoordinate::GetMaxRankIndex();
 
-	const int32 MinFile = static_cast<int32>(EBoardFile::A);
-	const int32 MaxFile = static_cast<int32>(EBoardFile::H);
+	const int32 MinFile = FTileCoordinate::GetMinFileIndex();
+	const int32 MaxFile = FTileCoordinate::GetMaxFileIndex();
 
 	int32 TileAt64Array = 0;
 
-	for (int32 r = MinRank; r <= MaxRank; ++r)
+	for (int32 i = MinRank; i <= MaxRank; ++i)
 	{
-		for (int32 f = MinFile; f <= MaxFile; ++f)
+		for (int32 j = MinFile; j <= MaxFile; ++j)
 		{
-			const EBoardRank CurrentRank = static_cast<EBoardRank>(r);
-			const EBoardFile CurrentFile = static_cast<EBoardFile>(f);
+			const EBoardRank CurrentRank = FTileCoordinate::ToRank(i);
+			const EBoardFile CurrentFile = FTileCoordinate::ToFile(j);
 
 			int32 Tile = UChessGameStatics::GetTileIndexAt(CurrentFile, CurrentRank);
 
@@ -257,22 +221,22 @@ void AChessGameState::MakeFilesRanksArrays()
 		BoardRanks[i] = EBoardRank::None;
 	}
 
-	int32 MinRank = (int32)EBoardRank::One;
-	int32 MaxRank = (int32)EBoardRank::Eight;
+	const int32 MinRank = FTileCoordinate::GetMinRankIndex();
+	const int32 MaxRank = FTileCoordinate::GetMaxRankIndex();
 
-	int32 MinFile = (int32)EBoardFile::A;
-	int32 MaxFile = (int32)EBoardFile::H;
+	const int32 MinFile = FTileCoordinate::GetMinFileIndex();
+	const int32 MaxFile = FTileCoordinate::GetMaxFileIndex();
 
 	for (int32 i = MinRank; i <= MaxRank; ++i)
 	{
 		for (int32 j = MinFile; j <= MaxFile; ++j)
 		{
-			EBoardFile File = static_cast<EBoardFile>(j);
-			EBoardRank Rank = static_cast<EBoardRank>(i);
+			const EBoardRank CurrentRank = FTileCoordinate::ToRank(i);
+			const EBoardFile CurrentFile = FTileCoordinate::ToFile(j);
 
-			int32 Tile = UChessGameStatics::GetTileIndexAt(File, Rank);
-			BoardFiles[Tile] = File;
-			BoardRanks[Tile] = Rank;
+			const int32 Tile = UChessGameStatics::GetTileIndexAt(CurrentFile, CurrentRank);
+			BoardFiles[Tile] = CurrentFile;
+			BoardRanks[Tile] = CurrentRank;
 		}
 	}
 }
@@ -341,15 +305,9 @@ uint64 AChessGameState::GeneratePositionHashKey()
 	for (int32 i = 0; i < Tiles.Num(); ++i)
 	{
 		//Tile is playable (in range)
-		if (static_cast<ETileCoord>(Tiles[i]) != ETileCoord::NoTile)
+		if (!Tiles[i].IsOffboard() && !Tiles[i].IsEmpty())
 		{
-			//Check it's (tile's) state
-			ETileState TileState = static_cast<ETileState>(Tiles[i]);
-
-			if (TileState != ETileState::NoPiece)
-			{
-				ResultKey ^= PieceHashKeys[Tiles[i]][i];
-			}
+			ResultKey ^= PieceHashKeys[Tiles[i].GetPieceAsInt()][i];
 		}
 	}
 
@@ -373,15 +331,14 @@ void AChessGameState::ResetBoard()
 	//Reset all tiles to NoTile
 	for (int32 i = 0; i < Tiles.Num(); ++i)
 	{
-		Tiles[i] = static_cast<int32>(ETileCoord::NoTile);
+		Tiles[i].Reset();
 	}
 
 	//Playable tiles set to NoPiece
 	for (int32 i = 0; i < 64; ++i)
 	{
-		//Bug source
-		int32 Tile = GetTileAs120(i);
-		Tiles[Tile] = static_cast<int32>(ETileState::NoPiece);
+		const int32 Tile = GetTileAs120(i);
+		Tiles[Tile].GetState().SetPiece(EmptyChessPiece);
 	}
 
 	//Reset all counters to 0
