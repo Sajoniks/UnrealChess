@@ -17,6 +17,8 @@ AChess::AChess()
 	SetRootComponent(PieceBase);
 	PieceTop->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
+	PieceTop->SetRelativeRotation(FRotator{0, -90, 0});
+	
 	ConstructorHelpers::FObjectFinder<UDataTable> MeshFinder{ TEXT("DataTable'/Game/Blueprint/DT_ChessMeshAssets.DT_ChessMeshAssets'") };
 	ConstructorHelpers::FObjectFinder<UDataTable> MaterialFinder{ TEXT("DataTable'/Game/Blueprint/DT_ChessMaterialAssets.DT_ChessMaterialAssets'") };
 
@@ -49,6 +51,21 @@ AChess::AChess()
 void AChess::OnConstruction(const FTransform& Transform)
 {
 	UpdateMesh();
+}
+
+bool AChess::IsWhite() const
+{
+	return ChessColor == EChessPieceColor::White;
+}
+
+bool AChess::IsBlack() const
+{
+	return !IsWhite();
+}
+
+EChessPieceRole AChess::GetPieceRole() const
+{
+	return ChessRole;
 }
 
 //TODO

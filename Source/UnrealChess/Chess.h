@@ -71,6 +71,15 @@ public:
 
 	void OnConstruction(const FTransform& Transform) override;
 
+	UFUNCTION(BlueprintCallable, Category="Get")
+	bool IsWhite() const;
+
+	UFUNCTION(BlueprintCallable, Category="Get")
+	bool IsBlack() const;
+
+	UFUNCTION(BlueprintCallable, Category="Get")
+	EChessPieceRole GetPieceRole() const;
+	
 	//TODO
 	void InitFromState(ETileState State);
 
