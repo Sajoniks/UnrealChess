@@ -8,6 +8,7 @@ enum class EBoardFile : uint8;
 enum class EBoardRank : uint8;
 
 class AChessGameState;
+class UArrowComponent;
 
 /*
  * Actor that represents chessboard
@@ -20,6 +21,9 @@ class UNREALCHESS_API AChessboard : public AActor
 
 	UPROPERTY(VisibleDefaultsOnly, Instanced, Category="Appearence")
 	UStaticMeshComponent* BoardMesh;
+
+	UPROPERTY(VisibleDefaultsOnly, Instanced, Category = "Appearence")
+	UArrowComponent* Arrow;
 	
 public:
 	
@@ -33,9 +37,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearence", meta=(ClampMin="10"))
 	//Size of the side of the tile in uu
 	int32 TileSize;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Gameplay")
-	FVector CornerLocation;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

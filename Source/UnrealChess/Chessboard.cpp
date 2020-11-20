@@ -5,7 +5,9 @@
 
 #include "Chess.h"
 #include "ChessGameState.h"
+#include "Components/ArrowComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AChessboard::AChessboard()
@@ -16,6 +18,11 @@ AChessboard::AChessboard()
 	TileSize = 25;
 
 	BoardMesh = CreateDefaultSubobject<UStaticMeshComponent>("Board");
+	SetRootComponent(BoardMesh);
+	
+	Arrow = CreateDefaultSubobject<UArrowComponent>("Arrow");
+	Arrow->SetWorldLocation(BoardMesh->GetSocketLocation("FL"));
+	Arrow->AttachToComponent(BoardMesh, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
@@ -23,11 +30,20 @@ FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 	const int32 FileIndex = (int32)File;
 	const int32 RankIndex = (int32)Rank;
 
-	return CornerLocation + FVector{
-		-(TileSize * RankIndex + TileSize/2.f),
-		TileSize * FileIndex + TileSize/2.f,
+	FVector FL = BoardMesh->GetSocketLocation("FL");
+
+	FVector Pos = FVector{
+		-(TileSize * RankIndex + TileSize / 2.f),
+		TileSize * FileIndex + TileSize / 2.f,
 		0
 	};
+
+	Pos = UKismetMathLibrary::TransformLocation(
+		GetRootComponent()->GetComponentTransform(),
+		Pos
+	);
+
+	return Pos + FL;
 }
 
 // Called when the game starts or when spawned
@@ -44,6 +60,7 @@ void AChessboard::BeginPlay()
 
 			ETileState State = GetChessGameState()->GetPieceAtTile(Y, X);
 
+			//TODO
 			if (State != ETileState::NoPiece)
 			{
 				FTransform T = FTransform{ GetTileCenter(Y, X) };
@@ -53,7 +70,7 @@ void AChessboard::BeginPlay()
 					);
 
 				Actor->InitFromState(State);
-
+				
 				Actor->FinishSpawning(T, true);
 			}
 		}
@@ -67,6 +84,11 @@ AChessGameState* AChessboard::GetChessGameState() const
 
 void AChessboard::DrawDebug()
 {
+	FVector FL = BoardMesh->GetSocketLocation("FL");
+	FVector FR = BoardMesh->GetSocketLocation("FR");
+	FVector BL = BoardMesh->GetSocketLocation("BL");
+	FVector BR = BoardMesh->GetSocketLocation("BR");
+	
 	for (int32 i = 0; i < 8; ++i)
 	{
 		for (int32 j = 0; j < 8; ++j)
@@ -77,16 +99,16 @@ void AChessboard::DrawDebug()
 			DrawDebugPoint(GetWorld(), GetTileCenter(Y, X), 10, FColor::Red);
 		}
 	}
-	
-	DrawDebugLine(GetWorld(), CornerLocation, CornerLocation + FVector{ 0, 8.f * TileSize, 0 }, FColor::Green);
-	DrawDebugLine(GetWorld(), CornerLocation, CornerLocation + FVector{ -(8.f * TileSize), 0, 0 }, FColor::Green);
-	DrawDebugLine(GetWorld(), CornerLocation + FVector{ 0, 8.f * TileSize, 0 }, CornerLocation + FVector{ -(8.f * TileSize), 8.f * TileSize, 0 }, FColor::Green);
-	DrawDebugLine(GetWorld(), CornerLocation + FVector{ -(8.f * TileSize), 0, 0 }, CornerLocation + FVector{ -(8.f * TileSize), 8.f * TileSize, 0 }, FColor::Green);
+
+	DrawDebugLine(GetWorld(), FL, BL, FColor::Green);
+	DrawDebugLine(GetWorld(), FR, BR, FColor::Green);
+	DrawDebugLine(GetWorld(), FL, FR, FColor::Green);
+	DrawDebugLine(GetWorld(), BL, BR, FColor::Green);
 }
 
 void AChessboard::OnConstruction(const FTransform& Transform)
 {
-	CornerLocation = GetActorLocation() + FVector{ 100, -100, 0 };
+
 }
 
 // Called every frame
