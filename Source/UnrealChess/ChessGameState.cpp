@@ -15,6 +15,9 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	MakeConverterArray_120To64();
 
 	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_ChessPieceCost.DT_ChessPieceCost'"));
+	CostDT = DTFinder.Object;
 }
 
 void AChessGameState::InitBoard(const FString& FEN)

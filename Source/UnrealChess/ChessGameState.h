@@ -9,6 +9,8 @@
 
 #include "ChessGameState.generated.h"
 
+class UDataTable;
+
 //TODO Try refactoring some field into player state
 //TODO JUST REFACTOR THIS CRAP
 
@@ -20,6 +22,9 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	UDataTable* CostDT;
+	
 public:
 
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
