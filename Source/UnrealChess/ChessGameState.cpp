@@ -15,7 +15,7 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	MakeConverterArray_120To64();
 	MakeFilesRanksArrays();
 	
-	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	InitBoard("8/8/8/8/8/3r3/8/8 w KQkq - 0 1");
 	UpdateListsMaterial();
 }
 
@@ -69,7 +69,7 @@ void AChessGameState::InitBoard(const FString& FEN)
 							int32 Tile64 = UChessGameStatics::GetTileIndexAt_64(File, Rank);
 							int32 Tile120 = GetTileAs120(Tile64);
 
-							Tiles[Tile120].GetState().SetPiece(Piece);
+							Tiles[Tile120].SetPiece(Piece);
 							Tiles[Tile120].SetPosition(File, Rank);
 
 							File = static_cast<EBoardFile>((int32)File + 1);
@@ -119,11 +119,120 @@ void AChessGameState::InitBoard(const FString& FEN)
 	}
 }
 
-FChessPiece& AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank)
+const FChessPiece& AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank) const
 {
 	return Tiles[UChessGameStatics::GetTileIndexAt(File, Rank)].GetState().GetChessPiece();
 }
 
+bool AChessGameState::IsSquareAttacked(EBoardFile File, EBoardRank Rank, EPieceColor MovingSide)
+{
+	const int32 TileIdx = UChessGameStatics::GetTileIndexAt(File, Rank);
+
+	//Check pawns attacking
+	if (MovingSide == EPieceColor::White)
+	{
+		if (Tiles[TileIdx + 11].GetPiece() == BlackPawn ||
+			Tiles[TileIdx + 9].GetPiece() == BlackPawn)
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (Tiles[TileIdx + 11].GetPiece() == BlackPawn ||
+			Tiles[TileIdx + 9].GetPiece() == BlackPawn)
+		{
+			return true;
+		}
+	}
+
+	//Check knights attacking
+	for (auto&& Direction : KnightDir)
+	{
+		const FChessPiece& Piece = Tiles[TileIdx + Direction].GetPiece();
+		
+		if (Piece.IsA(EChessPieceRole::Knight) && 
+			Piece.GetColor() == MovingSide
+			)
+		{
+			return true;
+		}
+	}
+
+	//Check rooks and queens attacking
+	for (auto&& Direction : RookDir)
+	{
+		int32 TileTemp = TileIdx + Direction;
+		FChessBoardTile* Tile = &Tiles[TileTemp];
+
+		while(Tile->IsOnBoard())
+		{
+			if (!Tile->IsEmpty())
+			{
+				const FChessPiece& Piece = Tile->GetPiece();
+				
+				if ((Piece.IsA(EChessPieceRole::Rook) || 
+					 Piece.IsA(EChessPieceRole::Queen)) &&
+					 Piece.GetColor() == MovingSide
+					)
+				{
+					return true;
+				}
+
+				break;
+			}
+
+			TileTemp += Direction;
+			Tile = &Tiles[TileTemp];
+		}
+	}
+
+	//Check for bishops and queens attacking
+	//Same as for rooks and queens but other directions are being tested
+	for (auto&& Direction : BishopDir)
+	{
+		int32 TileTemp = TileIdx + Direction;
+		FChessBoardTile* Tile = &Tiles[TileTemp];
+
+		while (Tile->IsOnBoard())
+		{
+			if (!Tile->IsEmpty())
+			{
+				const FChessPiece& Piece = Tile->GetPiece();
+				if ((Piece.IsA(EChessPieceRole::Bishop) ||
+					Piece.IsA(EChessPieceRole::Queen)) &&
+					Piece.GetColor() == MovingSide
+					)
+				{
+					return true;
+				}
+
+				break;
+			}
+
+			TileTemp += Direction;
+			Tile = &Tiles[TileTemp];
+		}
+	}
+
+	//Check for kings attacking
+	for (auto&& Direction : KingDir)
+	{
+		const FChessPiece& Piece = Tiles[TileIdx + Direction].GetPiece();
+		if (Piece.IsA(EChessPieceRole::King) && Piece.GetColor() == Side)
+		{
+			return true;
+		}
+	}
+
+	//Tile is not attacked
+	return false;
+}
+
+void AChessGameState::GenerateAllMoves()
+{
+	Moves.Reset();
+}
 
 void AChessGameState::BeginPlay()
 {
@@ -151,7 +260,7 @@ void AChessGameState::UpdateListsMaterial()
 				++MajorPieces[ColorCode];
 			}
 
-			if (Piece.isMinorPiece())
+			if (Piece.IsMinorPiece())
 			{
 				++MinorPieces[ColorCode];
 			}
@@ -364,7 +473,7 @@ void AChessGameState::ResetBoard()
 	for (int32 i = 0; i < 64; ++i)
 	{
 		const int32 Tile = GetTileAs120(i);
-		Tiles[Tile].GetState().SetPiece(EmptyChessPiece);
+		Tiles[Tile].SetPiece(EmptyChessPiece);
 	}
 
 	//Reset all counters to 0

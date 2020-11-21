@@ -6,13 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
 
-
 #include "Chess.generated.h"
 
 class FChessPiece;
 class AChessboard;
 
-enum class ETileState : unsigned char;
+enum class ETileState :uint8;
+enum class EChessPieceColor : uint8;
+enum class EChessPieceRole : uint8;
+
 class UDataTable;
 
 USTRUCT(BlueprintType)
@@ -33,24 +35,6 @@ struct FChessMaterialPath : public FTableRowBase
 	UMaterialInstance* Material;
 };
 
-UENUM(BlueprintType)
-enum class EChessPieceRole : uint8
-{
-	Pawn,
-	Bishop,
-	Knight,
-	Rook,
-	Queen,
-	King
-};
-
-UENUM(BlueprintType)
-enum class EChessPieceColor : uint8
-{
-	Black,
-	White
-};
-
 UCLASS()
 class UNREALCHESS_API AChess : public AActor
 {
@@ -68,10 +52,7 @@ public:
 	// Sets default values for this actor's properties
 	AChess();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Appearence")
 	EChessPieceRole ChessRole;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Appearence")
 	EChessPieceColor ChessColor;
 
 	void OnConstruction(const FTransform& Transform) override;
@@ -82,7 +63,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Get")
 	bool IsBlack() const;
 
-	UFUNCTION(BlueprintCallable, Category="Get")
+	//	UFUNCTION(BlueprintCallable, Category="Get")
 	EChessPieceRole GetPieceRole() const;
 
 	//Init piece from chess piece struct

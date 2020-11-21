@@ -31,7 +31,7 @@ public:
 
 	FChessTileState() = default;
 
-	FORCEINLINE FChessPiece& GetChessPiece() 
+	FORCEINLINE const FChessPiece& GetChessPiece() const
 	{
 		return ChessPiece;
 	}
@@ -70,9 +70,14 @@ public:
 		Coords = {};
 	}
 
-	FORCEINLINE FChessTileState& GetState()
+	FORCEINLINE const FChessTileState& GetState() const
 	{
 		return State;
+	}
+
+	FORCEINLINE void SetPiece(const FChessPiece& Piece)
+	{
+		State.SetPiece(Piece);
 	}
 
 	//Get combined tile position
@@ -109,7 +114,7 @@ public:
 		return !IsOnBoard() && !IsEmpty() && State.GetChessPiece() == Piece;
 	}
 
-	FORCEINLINE FChessPiece& GetPiece()
+	FORCEINLINE const FChessPiece& GetPiece() const
 	{
 		return State.GetChessPiece();
 	}
@@ -126,6 +131,26 @@ public:
 	}
 };
 
+class UNREALCHESS_API FChessMove
+{
+	int32 Move = 0;
+	int32 Score = 0;
+	
+public:
+
+	FChessMove(const FTileCoordinate& From, const FTileCoordinate& To, bool bCapture = false):
+		Move(0), Score(0) {}
+
+	int32 GetFromTileIndex()	const { return Move & 0x3F; }
+	int32 GetToTileIndex()	const { return (Move >> 7) & 0x3F; }
+	int32 GetCapturedPiece()	const { return (Move >> 14) & 0xF; }
+	int32 GetPromotedPiece()	const { return (Move >> 20) & 0xF; }
+
+	bool IsEnPassantMove()	const { return Move & 0x40000; }
+	bool IsPawnStartMove()	const { return Move & 0x80000; }
+	bool IsCastlingMove()		const { return Move & 0x1000000; }
+};
+
 /**
  * 
  */
@@ -140,9 +165,18 @@ public:
 
 	void InitBoard(const FString& FEN);
 
-	//UFUNCTION(BlueprintCallable, Category="Get")
-	FChessPiece& GetPieceAtTile(EBoardFile File, EBoardRank Rank);
+	//
+	const FChessPiece& GetPieceAtTile(EBoardFile File, EBoardRank Rank) const;
 
+	//
+	bool IsSquareAttacked(EBoardFile File, EBoardRank Rank, EPieceColor Side);
+	
+	//
+	void AddQuietMove();
+	void AddCaptureMove();
+	void AddEnPassantMove();
+	void GenerateAllMoves();
+	
 	void BeginPlay() override;
 	
 private:
@@ -202,6 +236,9 @@ private:
 	//
 	TArray<FChessMoveRecord> History;
 
+	//
+	TArray<FChessMove> Moves;
+
 	/*Some helper arrays to handle 120-tile indexing and 64-tile indexing*/
 	/*Too low level, need refactor TODO*/
 	
@@ -215,6 +252,13 @@ private:
 
 	/****************************************************/
 
+	//Move directions for pieces
+	//TODO
+	TArray<int32, TFixedAllocator<8>> KnightDir = {-8, -19, -21, -12, 8, 10, 21, 12};
+	TArray<int32, TFixedAllocator<4>> RookDir = { -1, -10, 1, 10 };
+	TArray<int32, TFixedAllocator<4>> BishopDir = { -9, -11, 11, 9 };
+	TArray<int32, TFixedAllocator<8>> KingDir = { -1, -10, 1, 10, -9, -11, 11, 9 };
+	
 	//For faster move generation
 	//Piece list
 	TStaticArray<TStaticArray<int32, 10>, 13> PieceList{ TStaticArray<int32, 10>{0} };
@@ -265,3 +309,15 @@ private:
 
 	void ResetBoard();
 };
+
+/* Game Move Encoding */
+//Use 28 bits	
+/*
+0000 0000 0000 0000 0000 0111 1111 -> From				0x3F
+0000 0000 0000 0011 1111 1000 0000 -> To					>> 7, 0x3F
+0000 0000 0011 1100 0000 0000 0000 -> Captured piece	>> 14, 0XF
+0000 0000 0100 0000 0000 0000 0000 -> Is En Passant		0x40000
+0000 0000 1000 0000 0000 0000 0000 -> Pawn start			0x80000
+0000 1111 0000 0000 0000 0000 0000 -> Promoted piece	>> 20, 0xF
+0001 0000 0000 0000 0000 0000 0000 -> Is Castling		0x1000000
+ */

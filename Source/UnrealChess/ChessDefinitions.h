@@ -28,6 +28,23 @@ enum class ETileState : uint8
 	BlackKing	
 };
 
+UENUM(BlueprintType)
+enum class EChessPieceRole : uint8
+{
+	Pawn,
+	Bishop,
+	Knight,
+	Rook,
+	Queen,
+	King
+};
+
+UENUM(BlueprintType)
+enum class EChessPieceColor : uint8
+{
+	Black,
+	White
+};
 
 
 UENUM(BlueprintType)
@@ -97,9 +114,10 @@ public:
 
 	FORCEINLINE bool IsBigPiece() const;
 	FORCEINLINE bool IsMajorPiece() const;
-	FORCEINLINE bool isMinorPiece() const;
+	FORCEINLINE bool IsMinorPiece() const;
+	FORCEINLINE bool IsA(EChessPieceRole Role) const;
 
-	static FChessPiece GetPieceFromChar(TCHAR Char);
+	static const FChessPiece& GetPieceFromChar(TCHAR Char);
 };
 
 /****Predefined pieces constants****/
@@ -218,7 +236,7 @@ public:
 
 	FORCEINLINE bool IsValid() const;
 
-	FORCEINLINE int32 ToInt();
+	FORCEINLINE int32 ToInt() const;
 
 	static EBoardRank ToRank(int32 Int)
 	{

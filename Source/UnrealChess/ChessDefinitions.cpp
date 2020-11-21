@@ -72,12 +72,38 @@ bool FChessPiece::IsMajorPiece() const
 	return bIsMajor;
 }
 
-bool FChessPiece::isMinorPiece() const
+bool FChessPiece::IsMinorPiece() const
 {
 	return bIsMinor;
 }
 
-FChessPiece FChessPiece::GetPieceFromChar(TCHAR Char)
+bool FChessPiece::IsA(EChessPieceRole Role) const
+{
+	switch(Role)
+	{
+	case EChessPieceRole::Pawn:
+		return State == ETileState::BlackPawn || State == ETileState::WhitePawn;
+
+	case EChessPieceRole::Knight:
+		return State == ETileState::BlackKnight || State == ETileState::WhiteKnight;
+
+	case EChessPieceRole::Bishop:
+		return State == ETileState::BlackBishop || State == ETileState::WhiteBishop;
+
+	case EChessPieceRole::Rook:
+		return State == ETileState::BlackRook || State == ETileState::WhiteRook;
+
+	case EChessPieceRole::Queen:
+		return State == ETileState::BlackQueen || State == ETileState::WhiteQueen;
+
+	case EChessPieceRole::King:
+		return State == ETileState::BlackKing || State == ETileState::WhiteKing;
+		
+	default: return false;
+	}
+}
+
+const FChessPiece& FChessPiece::GetPieceFromChar(TCHAR Char)
 {
 	switch (Char)
 	{
@@ -132,7 +158,7 @@ bool FTileCoordinate::IsValid() const
 	return Coordinate != ETileCoord::NoTile && Rank != EBoardRank::None && File != EBoardFile::None;
 }
 
-int32 FTileCoordinate::ToInt()
+int32 FTileCoordinate::ToInt() const
 {
 	return (int32)Coordinate;
 }

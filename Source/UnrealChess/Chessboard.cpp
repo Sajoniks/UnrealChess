@@ -101,8 +101,13 @@ void AChessboard::DrawDebug()
 		{
 			auto X = static_cast<EBoardRank>(i);
 			auto Y = static_cast<EBoardFile>(j);
-			
-			DrawDebugPoint(GetWorld(), GetTileCenter(Y, X), 10, FColor::Red);
+
+			bool bAttacked = GetChessGameState()->IsSquareAttacked(Y, X, EPieceColor::Black);
+
+			DrawDebugPoint(GetWorld(), GetTileCenter(Y, X), 10, 
+				bAttacked ? 
+				FColor::Red : FColor::Emerald
+			);
 		}
 	}
 
