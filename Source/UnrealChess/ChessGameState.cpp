@@ -15,8 +15,10 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	MakeConverterArray_120To64();
 	MakeFilesRanksArrays();
 	
-	InitBoard("8/8/8/8/8/3r3/8/8 w KQkq - 0 1");
+	InitBoard("8/8/8/8/8/3P3/8/8 w KQkq - 0 1");
 	UpdateListsMaterial();
+
+	GenerateAllMoves();
 }
 
 void AChessGameState::InitBoard(const FString& FEN)
@@ -229,9 +231,129 @@ bool AChessGameState::IsSquareAttacked(EBoardFile File, EBoardRank Rank, EPieceC
 	return false;
 }
 
+void AChessGameState::AddQuietMove(const FChessMove& Move)
+{
+	Moves.Emplace(Move);
+}
+
+void AChessGameState::AddCaptureMove(const FChessMove& Move)
+{
+	Moves.Emplace(Move);
+}
+
+void AChessGameState::AddEnPassantMove(const FChessMove& Move)
+{
+	Moves.Emplace(Move);
+}
+
+void AChessGameState::AddWhitePawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To,
+	const FChessPiece& Captured)
+{
+	if (From.GetRank() == EBoardRank::Seven)
+	{
+		AddCaptureMove({From, To, &Captured, &WhiteQueen});
+		AddCaptureMove({ From, To, &Captured, &WhiteRook});
+		AddCaptureMove({ From, To, &Captured, &WhiteBishop});
+		AddCaptureMove({ From, To, &Captured, &WhiteKnight});
+	}
+	else
+	{
+		AddCaptureMove({ From, To, &Captured, nullptr });
+	}
+}
+
+void AChessGameState::AddWhitePawnMove(const FTileCoordinate& From, const FTileCoordinate& To)
+{
+	if (From.GetRank() == EBoardRank::Seven)
+	{
+		AddQuietMove({ From, To, nullptr, &WhiteQueen });
+		AddQuietMove({ From, To, nullptr, &WhiteRook });
+		AddQuietMove({ From, To, nullptr, &WhiteBishop});
+		AddQuietMove({ From, To, nullptr, &WhiteKnight});
+	}
+	else
+	{
+		AddQuietMove({ From, To, nullptr, nullptr });
+	}
+}
+
 void AChessGameState::GenerateAllMoves()
 {
 	Moves.Reset();
+
+	//Generate for white side
+	if (Side == EPieceColor::White)
+	{
+		int32 WhitePawnCode = WhitePawn.GetCode();
+
+		for (int32 i = 0; i < PieceCount[WhitePawnCode]; ++i)
+		{
+			FTileCoordinate Coord = PieceList[WhitePawnCode][i];
+			int32 TileIndex = Coord.ToInt();
+
+			if (Tiles[TileIndex + 10].IsEmpty())
+			{
+				AddWhitePawnMove(
+					Coord, 
+					Tiles[TileIndex + 10].GetPosition()
+				);
+				
+				if (Coord.GetRank() == EBoardRank::Two && Tiles[TileIndex + 20].IsEmpty())
+				{
+					AddQuietMove({ 
+						Coord,
+						Tiles[TileIndex + 20].GetPosition(),
+						nullptr,
+						nullptr,
+						FChessMove::FLAG_PawnStartMove
+					});
+				}
+
+				//note
+				//be careful
+				FChessBoardTile TTile = Tiles[TileIndex + 9];
+				
+				if (TTile.IsOnBoard())
+				{
+					if (TTile.GetPiece().GetColor() == EPieceColor::Black)
+						AddWhitePawnCaptureMove(Coord, TTile.GetPosition(), TTile.GetPiece());
+
+					//TODO
+					if (TTile.GetPosition().ToInt() == EnPassantTile.Get(99))
+						AddCaptureMove({ 
+						Coord,
+							TTile.GetPosition(),
+							nullptr,
+							nullptr,
+							FChessMove::FLAG_EnPassantMove
+						});
+				}
+
+				TTile = Tiles[TileIndex + 11];
+
+				if (TTile.IsOnBoard())
+				{
+					if (TTile.GetPiece().GetColor() == EPieceColor::Black)
+						AddWhitePawnCaptureMove(Coord, TTile.GetPosition(), TTile.GetPiece());
+
+					//TODO
+					//TODO
+					if (TTile.GetPosition().ToInt() == EnPassantTile.Get(99))
+						AddCaptureMove({
+						Coord,
+							TTile.GetPosition(),
+							nullptr,
+							nullptr,
+							FChessMove::FLAG_EnPassantMove
+							});
+				}
+			}
+		}
+	}
+	else
+	{
+		
+	}
 }
 
 void AChessGameState::BeginPlay()
@@ -285,7 +407,7 @@ void AChessGameState::UpdateListsMaterial()
 			//PieceList[WhitePawn][1] = A2
 			//CountOf(WhitePawn) += 1;
 			//
-			PieceList[PieceCode][PieceCount[PieceCode]] =	 TileIdx;
+			PieceList[PieceCode][PieceCount[PieceCode]] = Tile.GetPosition();
 			++PieceCount[PieceCode];
 
 			if (Piece == WhiteKing || Piece == BlackKing)

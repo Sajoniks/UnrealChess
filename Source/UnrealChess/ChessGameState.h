@@ -81,7 +81,7 @@ public:
 	}
 
 	//Get combined tile position
-	FORCEINLINE FTileCoordinate& GetPosition()
+	FORCEINLINE const FTileCoordinate& GetPosition() const
 	{
 		return Coords;
 	}
@@ -103,13 +103,13 @@ public:
 	FORCEINLINE int32 GetRankAsInt() const { return (int32)Coords.GetRank(); }
 
 	//Piece code
-	FORCEINLINE int32 GetPieceAsInt() { return State.GetChessPiece().GetCode(); }
+	FORCEINLINE int32 GetPieceAsInt() const { return State.GetChessPiece().GetCode(); }
 
 	//Color code
-	FORCEINLINE int32 GetColorAsInt(){ return State.GetChessPiece().GetColorCode(); }
+	FORCEINLINE int32 GetColorAsInt() const { return State.GetChessPiece().GetColorCode(); }
 
 	//Check if tile has given Piece (not empty and equal to it)
-	FORCEINLINE bool HasPiece(const FChessPiece& Piece)
+	FORCEINLINE bool HasPiece(const FChessPiece& Piece) const
 	{
 		return !IsOnBoard() && !IsEmpty() && State.GetChessPiece() == Piece;
 	}
@@ -138,8 +138,29 @@ class UNREALCHESS_API FChessMove
 	
 public:
 
-	FChessMove(const FTileCoordinate& From, const FTileCoordinate& To, bool bCapture = false):
-		Move(0), Score(0) {}
+	static const int32 FLAG_EnPassantMove = 0x40000;
+	static const int32 FLAG_PawnStartMove = 0x80000;
+	static const int32 FLAG_PromotionMove = 0x1000000;
+
+	FChessMove(
+		const FTileCoordinate& From, 
+		const FTileCoordinate& To, 
+		const FChessPiece* Captured, 
+		const FChessPiece* Promoted,
+		int32 Flags = 0
+	)
+	{
+		int32 PromotedCode = (Promoted) ? Promoted->GetCode() : 0;
+		int32 CapturedCode = (Captured) ? Captured->GetCode() : 0;
+		
+		Move = (
+				 From.ToInt() | 
+				(To.ToInt() << 7) | 
+				(CapturedCode << 14) | 
+				(PromotedCode << 20) |
+				(Flags)
+			);
+	}
 
 	int32 GetFromTileIndex()	const { return Move & 0x3F; }
 	int32 GetToTileIndex()	const { return (Move >> 7) & 0x3F; }
@@ -172,9 +193,14 @@ public:
 	bool IsSquareAttacked(EBoardFile File, EBoardRank Rank, EPieceColor Side);
 	
 	//
-	void AddQuietMove();
-	void AddCaptureMove();
-	void AddEnPassantMove();
+	void AddQuietMove(const FChessMove& Move);
+	void AddCaptureMove(const FChessMove& Move);
+	void AddEnPassantMove(const FChessMove& Move);
+
+	//
+	void AddWhitePawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To, const FChessPiece& Captured);
+	void AddWhitePawnMove(const FTileCoordinate& From, const FTileCoordinate& To);
+	
 	void GenerateAllMoves();
 	
 	void BeginPlay() override;
@@ -261,8 +287,7 @@ private:
 	
 	//For faster move generation
 	//Piece list
-	TStaticArray<TStaticArray<int32, 10>, 13> PieceList{ TStaticArray<int32, 10>{0} };
-
+	TStaticArray<TStaticArray<FTileCoordinate, 10>, 13> PieceList{ };
 
 	//Cached values of ranks and files
 	TStaticArray<EBoardFile, 120> BoardFiles;
