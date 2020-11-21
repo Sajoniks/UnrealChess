@@ -76,11 +76,23 @@ public:
 	bool operator==(const FChessPiece& Other) const;
 	bool operator!=(const FChessPiece& Other) const;
 
+	/**Piece code
+	 * @return Integer in range [1-12] (1-white pawn, 2-white knight, ...), or 0, if invalid
+	 */
 	FORCEINLINE int32 GetCode() const;
+
+	//Chess piece value
 	FORCEINLINE int32 GetCost() const;
 
+	//Chess state as enum
 	FORCEINLINE ETileState GetEnum() const;
+
+	//Chess piece color enum
 	FORCEINLINE EPieceColor GetColor() const;
+
+	/**Color code of the piece
+	 * @return Integer in range [0-1], if chess is valid, else [2-3] if invalid
+	 */
 	FORCEINLINE int32 GetColorCode() const;
 
 	FORCEINLINE bool IsBigPiece() const;
@@ -197,13 +209,16 @@ public:
 	FTileCoordinate(EBoardFile File, EBoardRank Rank):
 	Coordinate(), Rank(Rank), File(File)
 	{
+		Coordinate = static_cast<ETileCoord>(21 + (int32)Rank * 10 + (int32)File);
 	}
 
-	FORCEINLINE ETileCoord GetPosition() const;
+	FORCEINLINE ETileCoord GetEnum() const;
 	FORCEINLINE EBoardFile GetFile() const;
 	FORCEINLINE EBoardRank GetRank() const;
 
 	FORCEINLINE bool IsValid() const;
+
+	FORCEINLINE int32 ToInt();
 
 	static EBoardRank ToRank(int32 Int)
 	{

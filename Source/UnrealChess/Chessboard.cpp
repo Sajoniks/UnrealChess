@@ -63,20 +63,21 @@ void AChessboard::BeginPlay()
 			auto X = static_cast<EBoardRank>(i);
 			auto Y = static_cast<EBoardFile>(j);
 
-			ETileState State = GetChessGameState()->GetPieceAtTile(Y, X).GetEnum();
+			FChessPiece Piece = GetChessGameState()->GetPieceAtTile(Y, X);
 
 			//TODO
-			if (State != ETileState::NoPiece)
+			if (Piece != EmptyChessPiece)
 			{
-				FTransform T = FTransform{ GetTileCenter(Y, X) };
+				FRotator R = GetActorRotation();
+				FTransform T = FTransform{R, GetTileCenter(Y,X)};
 				
 				auto Actor = GetWorld()->SpawnActorDeferred<AChess>(
 						AChess::StaticClass(), T
 					);
 
-				Actor->InitFromState(State);
+				Actor->InitPiece(Piece, this);
 				
-				Actor->FinishSpawning(T, true);
+				Actor->FinishSpawning(T);
 			}
 		}
 	}

@@ -44,8 +44,6 @@ AChess::AChess()
 	
 	ChessColor = EChessPieceColor::White;
 	ChessRole = EChessPieceRole::Pawn;
-
-	UpdateMesh();
 }
 
 void AChess::OnConstruction(const FTransform& Transform)
@@ -68,62 +66,63 @@ EChessPieceRole AChess::GetPieceRole() const
 	return ChessRole;
 }
 
-//TODO
-void AChess::InitFromState(ETileState State)
+void AChess::InitPiece(const FChessPiece& Piece, AChessboard* Board)
 {
-	switch(State)
+	switch(Piece.GetColor())
 	{
-	case ETileState::WhitePawn:
+	case EPieceColor::White:
 		ChessColor = EChessPieceColor::White;
-		ChessRole = EChessPieceRole::Pawn;
 		break;
-	case ETileState::WhiteKnight:
-		ChessColor = EChessPieceColor::White;
-		ChessRole = EChessPieceRole::Knight;
-		break;
-	case ETileState::WhiteBishop:
-		ChessColor = EChessPieceColor::White;
-		ChessRole = EChessPieceRole::Bishop;
-		break;
-	case ETileState::WhiteRook:
-		ChessColor = EChessPieceColor::White;
-		ChessRole = EChessPieceRole::Rook;
-		break;
-	case ETileState::WhiteQueen:
-		ChessColor = EChessPieceColor::White;
-		ChessRole = EChessPieceRole::Queen;
-		break;
-	case ETileState::WhiteKing:
-		ChessColor = EChessPieceColor::White;
-		ChessRole = EChessPieceRole::King;
-		break;
-	case ETileState::BlackPawn:
+
+	case EPieceColor::Black:
 		ChessColor = EChessPieceColor::Black;
-		ChessRole = EChessPieceRole::Pawn;
 		break;
-	case ETileState::BlackKnight:
-		ChessColor = EChessPieceColor::Black;
-		ChessRole = EChessPieceRole::Knight;
-		break;
-	case ETileState::BlackBishop:
-		ChessColor = EChessPieceColor::Black;
-		ChessRole = EChessPieceRole::Bishop;
-		break;
-	case ETileState::BlackRook:
-		ChessColor = EChessPieceColor::Black;
-		ChessRole = EChessPieceRole::Rook;
-		break;
-	case ETileState::BlackQueen:
-		ChessColor = EChessPieceColor::Black;
-		ChessRole = EChessPieceRole::Queen;
-		break;
-	case ETileState::BlackKing:
-		ChessColor = EChessPieceColor::Black;
-		ChessRole = EChessPieceRole::King;
-		break;
+
 	default:
-		break;
+		UE_LOG(LogActor, Warning, TEXT("Invalid parameter in chess piece initalization: %s"), *UEnum::GetValueAsString(Piece.GetColor()));
+		return;
 	}
+
+	switch(Piece.GetEnum())
+	{
+	case ETileState::WhitePawn: case ETileState::BlackPawn:
+		ChessRole = EChessPieceRole::Pawn;
+		break;
+
+	case ETileState::WhiteKnight: case ETileState::BlackKnight:
+		ChessRole = EChessPieceRole::Knight;
+		break;
+
+	case ETileState::WhiteBishop: case ETileState::BlackBishop:
+		ChessRole = EChessPieceRole::Bishop;
+		break;
+
+	case ETileState::WhiteRook: case ETileState::BlackRook:
+		ChessRole = EChessPieceRole::Rook;
+		break;
+
+	case ETileState::WhiteQueen: case ETileState::BlackQueen:
+		ChessRole = EChessPieceRole::Queen;
+		break;
+
+	case ETileState::WhiteKing: case ETileState::BlackKing:
+		ChessRole = EChessPieceRole::King;
+		break;
+		
+	default:
+
+		UE_LOG(LogActor, Warning, TEXT("Invalid parameter in chess piece initalization: %s"), *UEnum::GetValueAsString(Piece.GetEnum()));
+		return;
+	}
+
+	//Rotate piece towards other side
+	if (ChessColor == EChessPieceColor::White)
+		AddActorWorldRotation(FRotator{ 0,180,0 });
+
+	OwningChessboard = Board;
+	PieceCost = Piece.GetCost();
+
+	UpdateMesh();
 }
 
 // Called when the game starts or when spawned

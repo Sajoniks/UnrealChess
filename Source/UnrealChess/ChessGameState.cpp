@@ -2,7 +2,6 @@
 
 
 #include "ChessGameState.h"
-#include "Engine/DataTable.h"
 
 #include "ChessGameStatics.h"
 
@@ -17,11 +16,7 @@ AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 	MakeFilesRanksArrays();
 	
 	InitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-	//UpdateListsMaterial();
-
-	//TODO
-	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_ChessPieceInfo.DT_ChessPieceInfo'"));
-	CostDT = DTFinder.Object;
+	UpdateListsMaterial();
 }
 
 void AChessGameState::InitBoard(const FString& FEN)
@@ -137,33 +132,64 @@ void AChessGameState::BeginPlay()
 
 void AChessGameState::UpdateListsMaterial()
 {
-	for (int32 i = 0; i < Tiles.Num(); ++i)
+	for (auto&& Tile : Tiles)
 	{
-		int32 Tile = i;
-		FChessPiece ChessPiece = Tiles[i].GetState().GetChessPiece();
-		
-		if (!Tiles[i].IsOffboard())
+		//If tile is on board and has a chess piece
+		if (Tile.IsOnBoard() && !Tile.IsEmpty())
 		{
-			if (!Tiles[i].IsEmpty())
+			const FChessPiece& Piece = Tile.GetPiece();
+			int32 ColorCode = Piece.GetColorCode();
+
+			//Increment counters by chess piece type
+			if (Piece.IsBigPiece())
 			{
-				int32 ColorCode = ChessPiece.GetColorCode();
-				
-				if (ChessPiece.IsBigPiece())
-					BigPieces[ColorCode]++;
+				++BigPieces[ColorCode];
+			}
 
-				if (ChessPiece.IsMajorPiece())
-					MajorPieces[ColorCode]++;
+			if (Piece.IsMajorPiece())
+			{
+				++MajorPieces[ColorCode];
+			}
 
-				if (ChessPiece.isMinorPiece())
-					MinorPieces[ColorCode]++;
+			if (Piece.isMinorPiece())
+			{
+				++MinorPieces[ColorCode];
+			}
 
-				Material[ColorCode] += ChessPiece.GetCost();
-				PieceCount[Tiles[i].GetPieceAsInt()]++;
+			int32 PieceCode = Piece.GetCode();
+			int32 TileIdx = Tile.GetPosition().ToInt();
+			
+			Material[ColorCode] += Piece.GetCost();
 
-				//TODO
+			//How it works
+			//Assume we have first white pawn on the A1 tile
+			//So in pseudo-code this will look like
+			//
+			//CountOf(WhitePawn) = 0;
+			//PieceList[WhitePawn][0] = A1;
+			//CountOf(WhitePawn) += 1;
+			//
+			//Next piece is a white pawn on the A2 tile
+			//So we have
+			//
+			//CountOf(WhitePawn) = 1
+			//PieceList[WhitePawn][1] = A2
+			//CountOf(WhitePawn) += 1;
+			//
+			PieceList[PieceCode][PieceCount[PieceCode]] =	 TileIdx;
+			++PieceCount[PieceCode];
+
+			if (Piece == WhiteKing || Piece == BlackKing)
+			{
+				Kings[ColorCode] = TileIdx;
 			}
 		}
 	}
+
+	UE_LOG(LogGameState, Display, TEXT("Calculated material:\n%d for whites;\n%d for blacks"),
+			Material[0],
+			Material[1]
+		);
 }
 
 void AChessGameState::MakeConverterArray_120To64()
@@ -305,7 +331,7 @@ uint64 AChessGameState::GeneratePositionHashKey()
 	for (int32 i = 0; i < Tiles.Num(); ++i)
 	{
 		//Tile is playable (in range)
-		if (!Tiles[i].IsOffboard() && !Tiles[i].IsEmpty())
+		if (!Tiles[i].IsOnBoard() && !Tiles[i].IsEmpty())
 		{
 			ResultKey ^= PieceHashKeys[Tiles[i].GetPieceAsInt()][i];
 		}

@@ -106,11 +106,16 @@ public:
 	//Check if tile has given Piece (not empty and equal to it)
 	FORCEINLINE bool HasPiece(const FChessPiece& Piece)
 	{
-		return !IsOffboard() && !IsEmpty() && State.GetChessPiece() == Piece;
+		return !IsOnBoard() && !IsEmpty() && State.GetChessPiece() == Piece;
+	}
+
+	FORCEINLINE FChessPiece& GetPiece()
+	{
+		return State.GetChessPiece();
 	}
 
 	//Check if this tile is not playable
-	FORCEINLINE bool IsOffboard() const
+	FORCEINLINE bool IsOnBoard() const
 	{
 		return Coords.IsValid();
 	}
@@ -128,9 +133,6 @@ UCLASS(CustomConstructor)
 class UNREALCHESS_API AChessGameState : public AGameStateBase
 {
 	GENERATED_BODY()
-
-	UPROPERTY()
-	UDataTable* CostDT;
 	
 public:
 
@@ -158,7 +160,6 @@ private:
 	TStaticArray<int32, 2> Kings{ 0 };
 
 	//The side that needs to make a move
-	//TODO replace this enum
 	EPieceColor Side = EPieceColor::Both;
 	
 	//Tile where en passant move is active
@@ -166,6 +167,8 @@ private:
 
 	//Counter that detects 50 move (100 half-move), when game is a draw
 	int32 FiftyMoveCounter = 0;
+	
+	//TODO move fields to the player state
 	
 	//White half-moves count
 	int32 Ply = 0;
@@ -186,29 +189,9 @@ private:
 	//Count of bishops, knights
 	TStaticArray<int32, 2> MinorPieces{ 0 };
 
-	//
+	//Total values of pieces by color
 	TStaticArray<int32, 2> Material;
 
-	//Hard-coded values that defines piece majority
-	TArray<bool, TFixedAllocator<13>> IsBig { false, false, true, true, true, true, true, false, true, true, true, true, true };
-	TArray<bool, TFixedAllocator<13>> IsMaj { false, false, false, false, true, true, true, false, false, false, true, true, true };
-	TArray<bool, TFixedAllocator<13>> IsMin { false, false, true, true, false, false, false, false, true, true, false, false, false };
-
-	//Hard-coded pieces cost
-	TArray<int32, TFixedAllocator<13>> PieceCost { 0, 100, 325, 325, 550, 1000, 50000, 100, 325, 325, 550, 1000, 50000 };
-	
-	//Hard-coded colors
-	TArray<EPieceColor, TFixedAllocator<13>> PieceColor {
-		
-		EPieceColor::Both,
-		
-		EPieceColor::White, EPieceColor::White, EPieceColor::White, EPieceColor::White, EPieceColor::White, EPieceColor::White,
-		EPieceColor::Black, EPieceColor::Black, EPieceColor::Black, EPieceColor::Black, EPieceColor::Black, EPieceColor::Black
-		
-	};
-
-	
-	
 	void UpdateListsMaterial();
 
 	uint64 PosHashKey = 0;
@@ -234,7 +217,7 @@ private:
 
 	//For faster move generation
 	//Piece list
-	TStaticArray<TStaticArray<int32, 13>, 10> PieceList{ TStaticArray<int32, 13>{0} };
+	TStaticArray<TStaticArray<int32, 10>, 13> PieceList{ TStaticArray<int32, 10>{0} };
 
 
 	//Cached values of ranks and files

@@ -9,6 +9,9 @@
 
 #include "Chess.generated.h"
 
+class FChessPiece;
+class AChessboard;
+
 enum class ETileState : unsigned char;
 class UDataTable;
 
@@ -53,9 +56,11 @@ class UNREALCHESS_API AChess : public AActor
 {
 	GENERATED_BODY()
 
+	//DT that contains references to the static meshes of the chess pieces
 	UPROPERTY()
 	UDataTable* MeshPaths;
 
+	//DT that contains references to the material instances of the chess piece
 	UPROPERTY()
 	UDataTable* MaterialPaths;
 	
@@ -79,20 +84,30 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Get")
 	EChessPieceRole GetPieceRole() const;
-	
-	//TODO
-	void InitFromState(ETileState State);
+
+	//Init piece from chess piece struct
+	void InitPiece(const FChessPiece& Piece, AChessboard* Board);
 
 protected:
 	// Called when the game starts or when spawned
 	void BeginPlay() override;
 
+	//Base piece
 	UPROPERTY(VisibleDefaultsOnly, Instanced, Category="Mesh")
 	UStaticMeshComponent* PieceBase;
 
+	//Top piece
 	UPROPERTY(VisibleDefaultsOnly, Instanced, Category = "Mesh")
 	UStaticMeshComponent* PieceTop;
 
+	//Chessboard that owns this piece
+	UPROPERTY()
+	AChessboard* OwningChessboard;
+
+	//Value of the piece
+	int32 PieceCost;
+
+	//Update appearance
 	void UpdateMesh();
 
 public:	
