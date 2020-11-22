@@ -219,6 +219,53 @@ const FChessPiece& FChessPiece::GetPieceFromChar(TCHAR Char)
 	}
 }
 
+const FChessPiece& FChessPiece::GetPieceFromCode(int32 Code)
+{
+	ETileState Coord = static_cast<ETileState>(Code);
+
+	switch(Coord)
+	{
+	case ETileState::WhitePawn:
+		return GWhitePawn;
+		
+	case ETileState::WhiteKnight:
+		return GWhiteKnight;
+		
+	case ETileState::WhiteBishop:
+		return GWhiteBishop;
+		
+	case ETileState::WhiteRook:
+		return GWhiteRook;
+		
+	case ETileState::WhiteQueen:
+		return GWhiteQueen;
+		
+	case ETileState::WhiteKing:
+		return GWhiteKing;
+		
+	case ETileState::BlackPawn:
+		return GBlackPawn;
+		
+	case ETileState::BlackKnight:
+		return GBlackKnight;
+		
+	case ETileState::BlackBishop:
+		return GBlackBishop;
+		
+	case ETileState::BlackRook:
+		return GBlackRook;
+		
+	case ETileState::BlackQueen:
+		return GBlackQueen;
+		
+	case ETileState::BlackKing:
+		return GBlackKing;
+		
+	default:
+		return GEmptyChessPiece;
+	}
+}
+
 
 ETileCoord FTileCoordinate::GetEnum() const
 {

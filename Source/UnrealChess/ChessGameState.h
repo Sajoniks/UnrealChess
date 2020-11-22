@@ -60,9 +60,15 @@ class FChessBoardTile
 	//Coords
 	FTileCoordinate Coords;
 
+	//Castle permission value
+	int32 CastlePermission = 15;
+
 public:
 
 	FChessBoardTile() = default;
+	FChessBoardTile(int32 Value):
+		CastlePermission(Value), State(), Coords{ETileCoord::NoTile}
+	{}
 
 	FORCEINLINE void Reset()
 	{
@@ -94,6 +100,11 @@ public:
 	FORCEINLINE void SetPosition(const EBoardFile& File, const EBoardRank& Rank)
 	{
 		SetPosition({File, Rank});
+	}
+
+	FORCEINLINE int32 GetCastlePermission() const
+	{
+		return CastlePermission;
 	}
 
 	//Converted file coordinate to int32
@@ -163,14 +174,18 @@ public:
 			);
 	}
 
-	int32 GetFromTileIndex()	const { return Move & 0x3F; }
-	int32 GetToTileIndex()	const { return (Move >> 7) & 0x3F; }
-	int32 GetCapturedPiece()	const { return (Move >> 14) & 0xF; }
-	int32 GetPromotedPiece()	const { return (Move >> 20) & 0xF; }
+	int32 GetFromTileIndex()		const { return Move & 0x3F; }
+	FTileCoordinate GetFrom()	const { return { (ETileCoord)GetFromTileIndex() }; }
+	int32 GetToTileIndex()		const { return (Move >> 7) & 0x3F; }
+	FTileCoordinate GetTo()		const { return { (ETileCoord)GetToTileIndex() }; }
+	int32 GetCapturedPiece()		const { return (Move >> 14) & 0xF; }
+	int32 GetPromotedPiece()		const { return (Move >> 20) & 0xF; }
 
-	bool IsEnPassantMove()	const { return Move & 0x40000; }
-	bool IsPawnStartMove()	const { return Move & 0x80000; }
-	bool IsCastlingMove()		const { return Move & 0x1000000; }
+	bool IsEnPassantMove()		const { return Move & 0x40000; }
+	bool IsPawnStartMove()		const { return Move & 0x80000; }
+	bool IsCastlingMove()			const { return Move & 0x1000000; }
+
+	int32 Raw()					const { return Move; }
 };
 
 /**
@@ -186,6 +201,8 @@ public:
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
 
 	void InitBoard(const FString& FEN);
+
+	EPieceColor GetMovingSide() const;
 
 	//
 	const FChessPiece& GetPieceAtTile(EBoardFile File, EBoardRank Rank) const;
@@ -205,6 +222,14 @@ public:
 	void AddBlackPawnMove(const FTileCoordinate& From, const FTileCoordinate& To);
 
 	void GenerateAllMoves();
+
+	void ClearPiece(const FTileCoordinate& Coord);
+	void AddPiece(const FTileCoordinate& Coord, const FChessPiece& Piece);
+	void MovePiece(const FTileCoordinate& From, const FTileCoordinate& To);
+	void TakeMove();
+	bool MakeMove(const FChessMove& Move);
+
+	const TArray<FChessMove>& GetMoves() const;
 	
 	void BeginPlay() override;
 	
@@ -216,7 +241,12 @@ private:
 	void GenerateNonSlideMoves();
 	void GenerateWhiteCastling();
 	void GenerateBlackCastling();
-	
+
+	void HashPiece(const FChessPiece& Piece, const FTileCoordinate& Coord);
+	void HashCastle();
+	void HashSide();
+	void HashEnPassant();
+
 	//
 	uint64 Bitboard = 0;
 
@@ -227,7 +257,7 @@ private:
 	TStaticArray<uint64, 3> Pawns{ 0 };
 
 	//King pieces positions
-	TStaticArray<int32, 2> Kings{ 0 };
+	TStaticArray<FTileCoordinate, 2> Kings{ };
 
 	//The side that needs to make a move
 	EPieceColor Side = EPieceColor::Both;
@@ -333,10 +363,10 @@ private:
 	int32 CountBits() const;
 
 	//Clears bit to 0 at given tile
-	void ClearBit(int32 Tile);
+	void ClearBit(uint64& BitBoard, int32 Idx);
 
 	//Sets bit to 1 at given tile
-	void SetBit(int32 Tile);
+	void SetBit(uint64& BitBoard, int32 Idx);
 
 	uint64 GeneratePositionHashKey();
 

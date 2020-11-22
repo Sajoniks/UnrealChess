@@ -5,6 +5,7 @@
 
 #include "Chess.h"
 #include "ChessGameState.h"
+#include "ChessGameStatics.h"
 #include "Components/ArrowComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -49,6 +50,18 @@ FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 TOptional<FVector> AChessboard::GetTileCenter(float X, float Y)
 {
 	return TOptional<FVector>();
+}
+
+void AChessboard::Move(const FTileCoordinate& From, const FTileCoordinate& To)
+{
+	GetChessGameState()->GenerateAllMoves();
+	for (auto&& Move : GetChessGameState()->GetMoves())
+	{
+		if (Move.GetFromTileIndex() == From.ToInt() && Move.GetToTileIndex() == To.ToInt())
+		{
+			GetChessGameState()->MakeMove(Move);
+		}
+	}
 }
 
 // Called when the game starts or when spawned
@@ -96,21 +109,17 @@ void AChessboard::DrawDebug()
 	FVector BL = BoardMesh->GetSocketLocation("BL");
 	FVector BR = BoardMesh->GetSocketLocation("BR");
 	
-	for (int32 i = 0; i < 8; ++i)
+	auto&& Moves = GetChessGameState()->GetMoves();
+	for (int32 i = 0; i < Moves.Num() - 1; i += 2)
 	{
-		for (int32 j = 0; j < 8; ++j)
-		{
-			auto X = static_cast<EBoardRank>(i);
-			auto Y = static_cast<EBoardFile>(j);
+		FTileCoordinate From = Moves[i].GetFrom();
+		FTileCoordinate To = Moves[i].GetTo();
 
-			bool bAttacked = GetChessGameState()->IsTileAttacked(Y, X, EPieceColor::Black);
-			bool bAttackedThem = GetChessGameState()->IsTileAttacked(Y, X, EPieceColor::White);
-
-			DrawDebugPoint(GetWorld(), GetTileCenter(Y, X), 10,
-				bAttacked ?
-				FColor::Black : FColor::Emerald
-			);
-		}
+		FVector P1 = GetTileCenter(From.GetFile(), From.GetRank());
+		FVector P2 = GetTileCenter(To.GetFile(), To.GetRank());
+		
+		DrawDebugPoint(GetWorld(), P1, 10, FColor::Red);
+		DrawDebugPoint(GetWorld(), P2, 10, FColor::Red);
 	}
 
 	DrawDebugLine(GetWorld(), FL, BL, FColor::Green);

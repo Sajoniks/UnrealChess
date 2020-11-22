@@ -146,6 +146,7 @@ public:
 	static const TArray<FChessPiece>& GetNonSlidingPiecesByColor(EPieceColor Color);
 	
 	static const FChessPiece& GetPieceFromChar(TCHAR Char);
+	static const FChessPiece& GetPieceFromCode(int32 Code);
 };
 
 /****Predefined pieces constants****/
@@ -265,6 +266,14 @@ public:
 	FORCEINLINE bool IsValid() const;
 
 	FORCEINLINE int32 ToInt() const;
+
+	FORCEINLINE bool operator==(const FTileCoordinate& Other)
+	{
+		if (this == &Other)
+			return true;
+
+		return Coordinate == Other.Coordinate;
+	}
 
 	static EBoardRank ToRank(int32 Int)
 	{

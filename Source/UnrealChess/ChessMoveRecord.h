@@ -8,9 +8,9 @@
  * 
  */
 struct UNREALCHESS_API FChessMoveRecord
-{
+{	
 	//
-	int32 MoveTile;
+	int32 Move;
 
 	//
 	int32 CastlePermission;

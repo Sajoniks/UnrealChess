@@ -9,6 +9,15 @@
 //Think about InitBoard location
 AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 {
+	//Update castling permissions
+	Tiles[FTileCoordinate{ ETileCoord::A1 }.ToInt()] = { 13 };
+	Tiles[FTileCoordinate{ ETileCoord::E1 }.ToInt()] = { 12 };
+	Tiles[FTileCoordinate{ ETileCoord::H1 }.ToInt()] = { 14 };
+	
+	Tiles[FTileCoordinate{ ETileCoord::A8 }.ToInt()] = { 7 };
+	Tiles[FTileCoordinate{ ETileCoord::E8 }.ToInt()] = { 3 };
+	Tiles[FTileCoordinate{ ETileCoord::H8 }.ToInt()] = { 11 };
+	
 	MakeBitMasks();
 	MakeHashKeys();
 
@@ -115,6 +124,11 @@ void AChessGameState::InitBoard(const FString& FEN)
 			GenerateAllMoves();
 		}
 	}
+}
+
+EPieceColor AChessGameState::GetMovingSide() const
+{
+	return Side;
 }
 
 const FChessPiece& AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank) const
@@ -336,6 +350,277 @@ void AChessGameState::GenerateAllMoves()
 		UE_LOG(LogGameState, Display, TEXT("Generated %d moves for side %s"), Moves.Num(), *UEnum::GetValueAsString(Side));
 
 	}
+}
+
+void AChessGameState::ClearPiece(const FTileCoordinate& Coord)
+{
+	check(Coord.IsValid());
+
+	int32 Idx = Coord.ToInt();
+	
+	FChessPiece Piece = Tiles[Idx].GetPiece();
+	check(Piece != GEmptyChessPiece);
+
+	int32 ColorCode = Piece.GetColorCode();
+	
+	HashPiece(Piece, Coord);
+
+	Tiles[Idx].SetPiece(GEmptyChessPiece);
+	Material[ColorCode] -= Piece.GetCost();
+
+	if (Piece.IsBigPiece())
+	{
+		--BigPieces[ColorCode];
+
+		if (Piece.IsMajorPiece())
+		{
+			--MajorPieces[ColorCode];
+		}
+
+		if (Piece.IsMinorPiece())
+		{
+			--MinorPieces[ColorCode];
+		}
+	}
+	else
+	{
+		//Update bitboard for color
+		ClearBit(Pawns[ColorCode], GetTileAs64(Coord.ToInt()));
+
+		//Update bitboard of combined colors
+		ClearBit(Pawns[2], GetTileAs64(Coord.ToInt()));
+	}
+
+	int32 PieceCode = Piece.GetCode();
+	int32 Count = PieceCount[PieceCode];
+	int32 TempCount = -1;
+	
+	for (int32 i = 0; i < Count; ++i)
+	{
+		if (PieceList[PieceCode][i] == Coord)
+		{
+			TempCount = i;
+			break;
+		}
+	}
+
+	check(TempCount != -1);
+
+	--PieceCount[PieceCode];
+	PieceList[PieceCode][TempCount] = PieceList[PieceCode][Count];
+}
+
+void AChessGameState::AddPiece(const FTileCoordinate& Coord, const FChessPiece& Piece)
+{
+	check(Coord.IsValid());
+	check(Piece != GEmptyChessPiece);
+
+	int32 ColorCode = Piece.GetColorCode();
+
+	HashPiece(Piece, Coord);
+
+	Tiles[Coord.ToInt()].SetPiece(Piece);
+
+	if (Piece.IsBigPiece())
+	{
+		
+	}
+	else
+	{
+		//Set bit to the current's side pawns bitboard
+		SetBit(Pawns[ColorCode], GetTileAs64(Coord.ToInt()));
+
+		//And to the combined bitboard
+		SetBit(Pawns[2], GetTileAs64(Coord.ToInt()));
+	}
+
+	Material[ColorCode] += Piece.GetCode();
+
+	int32 PieceCode = Piece.GetCode();
+	int32 Count = PieceCount[PieceCode];
+
+	PieceList[PieceCode][Count] = Coord;
+	PieceCount[PieceCode]++;
+}
+
+void AChessGameState::MovePiece(const FTileCoordinate& From, const FTileCoordinate& To)
+{
+	check(From.IsValid());
+	check(To.IsValid());
+
+	FChessPiece Piece = Tiles[From.ToInt()].GetPiece();
+	check(Piece != GEmptyChessPiece);
+
+	int32 FromIdx = From.ToInt();
+	int32 ToIdx = To.ToInt();
+	int32 ColorCode = Piece.GetColorCode();
+	int32 PieceCode = Piece.GetCode();
+	int32 Count = PieceCount[PieceCode];
+	
+	HashPiece(Piece, From);
+	Tiles[FromIdx].SetPiece(GEmptyChessPiece);
+
+	HashPiece(Piece, To);
+	Tiles[ToIdx].SetPiece(Piece);
+
+	if (!Piece.IsBigPiece())
+	{
+		ClearBit(Pawns[ColorCode], GetTileAs64(FromIdx));
+		ClearBit(Pawns[2], GetTileAs64(FromIdx));
+
+		SetBit(Pawns[ColorCode], GetTileAs64(ToIdx));
+		SetBit(Pawns[2], GetTileAs64(ToIdx));
+	}
+
+	bool bFound = false;
+	
+	for (int32 i = 0; i < Count; ++i)
+	{
+		if (PieceList[PieceCode][i] == From)
+		{
+			PieceList[PieceCode][i] = To;
+			bFound = true;
+			break;
+		}
+	}
+
+	//Piece must move!
+	check(bFound);
+}
+
+void AChessGameState::TakeMove()
+{
+	//TODO 
+}
+
+bool AChessGameState::MakeMove(const FChessMove& Move)
+{
+	int32 FromIdx = Move.GetFromTileIndex();
+	int32 ToIdx = Move.GetToTileIndex();
+
+	FChessBoardTile From = Tiles[FromIdx];
+	FChessBoardTile To = Tiles[ToIdx];
+	
+	FChessPiece Piece = Tiles[FromIdx].GetPiece();
+	check(Piece != GEmptyChessPiece);
+
+	FChessMoveRecord HistoryRecord{ .PosHashKey = PosHashKey };
+	
+	if (Move.IsEnPassantMove())
+	{
+		if (Side == EPieceColor::White)
+		{
+			ClearPiece(Tiles[FromIdx - 10].GetPosition());
+		}
+		else
+		{
+			ClearPiece(Tiles[FromIdx + 10].GetPosition());
+		}
+	}
+	else if (Move.IsCastlingMove())
+	{
+		switch(To.GetPosition().GetEnum())
+		{
+		case ETileCoord::C1:
+			MovePiece({ ETileCoord::A1 }, { ETileCoord::B1 });
+			break;
+
+		case ETileCoord::C8:
+			MovePiece({ ETileCoord::A8 }, { ETileCoord::D8 });
+			break;
+
+		case ETileCoord::G1:
+			MovePiece({ ETileCoord::H1 }, { ETileCoord::F1 });
+			break;
+
+		case ETileCoord::G8:
+			MovePiece({ ETileCoord::H8 }, { ETileCoord::H8 });
+			break;
+
+		default:
+			check(false && "Invalid castling move");
+		}
+	}
+
+	if (EnPassantTile.IsSet())
+	{
+		HashEnPassant();
+	}
+
+	HashCastle();
+
+	//TODO with ply
+	HistoryRecord.Move = Move.Raw();
+	HistoryRecord.FiftyMove = FiftyMoveCounter;
+	HistoryRecord.EnPassantTile = EnPassantTile.Get(99);
+	HistoryRecord.CastlePermission = CastlePermission;
+
+	CastlePermission &= From.GetCastlePermission();
+	CastlePermission &= To.GetCastlePermission();
+	EnPassantTile.Reset();
+
+	HashCastle();
+
+	FChessPiece CapturedPiece = FChessPiece::GetPieceFromCode(Move.GetCapturedPiece());
+	++FiftyMoveCounter;
+
+	if (CapturedPiece != GEmptyChessPiece)
+	{
+		ClearPiece(To.GetPosition());
+		FiftyMoveCounter = 0;
+	}
+
+	//ply
+
+	if (Piece.IsA(EChessPieceRole::Pawn))
+	{
+		FiftyMoveCounter = 0;
+		if (Move.IsPawnStartMove())
+		{
+			if (Side == EPieceColor::White)
+			{
+				EnPassantTile = From.GetPosition().ToInt() + 10;
+			}
+			else
+			{
+				EnPassantTile = From.GetPosition().ToInt() - 10;
+			}
+
+			HashEnPassant();
+		}
+	}
+
+	MovePiece(From.GetPosition(), To.GetPosition());
+
+	FChessPiece PromotedPiece = FChessPiece::GetPieceFromCode(Move.GetPromotedPiece());
+	if (PromotedPiece != GEmptyChessPiece)
+	{
+		ClearPiece(To.GetPosition());
+		AddPiece(To.GetPosition(), PromotedPiece);
+	}
+
+	if (Piece.IsA(EChessPieceRole::King))
+	{
+		Kings[(int32)Side] = To.GetPosition();
+	}
+
+	int32 SideCode = (int32)Side;
+	
+	Side = static_cast<EPieceColor>(SideCode ^ 1);
+	HashSide();
+
+	if (IsTileAttacked(Kings[SideCode].GetFile(), Kings[SideCode].GetRank(), Side)
+	{
+		TakeMove();
+		return true;
+	}
+
+	return false;
+}
+
+const TArray<FChessMove>& AChessGameState::GetMoves() const
+{
+	return Moves;
 }
 
 void AChessGameState::BeginPlay()
@@ -660,6 +945,26 @@ void AChessGameState::GenerateBlackCastling()
 	}
 }
 
+void AChessGameState::HashPiece(const FChessPiece& Piece, const FTileCoordinate& Coord)
+{
+	PosHashKey ^= PieceHashKeys[Piece.GetCode()][Coord.ToInt()];
+}
+
+void AChessGameState::HashCastle()
+{
+	PosHashKey ^= CastleHashKeys[CastlePermission];
+}
+
+void AChessGameState::HashSide()
+{
+	PosHashKey ^= SideHashKey;
+}
+
+void AChessGameState::HashEnPassant()
+{
+	PosHashKey ^= PieceHashKeys[GEmptyChessPiece.GetCode()][EnPassantTile.Get(99)];
+}
+
 void AChessGameState::UpdateListsMaterial()
 {
 	for (auto&& Tile : Tiles)
@@ -711,7 +1016,7 @@ void AChessGameState::UpdateListsMaterial()
 
 			if (Piece == GWhiteKing || Piece == GBlackKing)
 			{
-				Kings[ColorCode] = TileIdx;
+				Kings[ColorCode] = Tiles[TileIdx].GetPosition();
 			}
 		}
 	}
@@ -844,14 +1149,14 @@ int32 AChessGameState::CountBits() const
 	return Count;
 }
 
-void AChessGameState::ClearBit(int32 Tile)
+void AChessGameState::ClearBit(uint64& BitBoard, int32 Idx)
 {
-	Bitboard &= ClearMask[Tile];
+	BitBoard &= ClearMask[Idx];
 }
 
-void AChessGameState::SetBit(int32 Tile)
+void AChessGameState::SetBit(uint64& BitBoard, int32 Idx)
 {
-	Bitboard |= SetMask[Tile];
+	BitBoard |= SetMask[Idx];
 }
 
 uint64 AChessGameState::GeneratePositionHashKey()
@@ -916,7 +1221,7 @@ void AChessGameState::ResetBoard()
 		PieceCount[i] = 0;
 	}
 
-	Kings[0] = static_cast<int32>(ETileCoord::NoTile);
+	Kings[0] = FTileCoordinate{};
 	Kings[1] = Kings[0];
 
 	Side = EPieceColor::Both;

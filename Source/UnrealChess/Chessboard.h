@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Chessboard.generated.h"
 
+class FTileCoordinate;
 enum class EBoardFile : uint8;
 enum class EBoardRank : uint8;
 
@@ -43,6 +44,8 @@ public:
 	 * @return Location of the center of the tile, in world space (if found)
 	 */
 	TOptional<FVector> GetTileCenter(float X, float Y);
+
+	void Move(const FTileCoordinate& From, const FTileCoordinate& To);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Board state")
 	FString FEN;
