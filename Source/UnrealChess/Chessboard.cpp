@@ -110,7 +110,7 @@ void AChessboard::DrawDebug()
 	FVector BR = BoardMesh->GetSocketLocation("BR");
 	
 	auto&& Moves = GetChessGameState()->GetMoves();
-	for (int32 i = 0; i < Moves.Num() - 1; i += 2)
+	for (int32 i = 0; i < Moves.Num() - 1; i++)
 	{
 		FTileCoordinate From = Moves[i].GetFrom();
 		FTileCoordinate To = Moves[i].GetTo();

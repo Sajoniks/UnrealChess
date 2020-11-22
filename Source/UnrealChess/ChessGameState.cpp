@@ -504,7 +504,8 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 	FChessPiece Piece = Tiles[FromIdx].GetPiece();
 	check(Piece != GEmptyChessPiece);
 
-	FChessMoveRecord HistoryRecord{ .PosHashKey = PosHashKey };
+	FChessMoveRecord HistoryRecord{};
+	HistoryRecord.PosHashKey = PosHashKey;
 	
 	if (Move.IsEnPassantMove())
 	{
@@ -609,7 +610,7 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 	Side = static_cast<EPieceColor>(SideCode ^ 1);
 	HashSide();
 
-	if (IsTileAttacked(Kings[SideCode].GetFile(), Kings[SideCode].GetRank(), Side)
+	if (IsTileAttacked(Kings[SideCode].GetFile(), Kings[SideCode].GetRank(), Side))
 	{
 		TakeMove();
 		return true;

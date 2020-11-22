@@ -67,7 +67,7 @@ public:
 
 	FChessBoardTile() = default;
 	FChessBoardTile(int32 Value):
-		CastlePermission(Value), State(), Coords{ETileCoord::NoTile}
+		State(), Coords(ETileCoord::NoTile), CastlePermission(Value)
 	{}
 
 	FORCEINLINE void Reset()
@@ -176,8 +176,10 @@ public:
 
 	int32 GetFromTileIndex()		const { return Move & 0x3F; }
 	FTileCoordinate GetFrom()	const { return { (ETileCoord)GetFromTileIndex() }; }
+	
 	int32 GetToTileIndex()		const { return (Move >> 7) & 0x3F; }
 	FTileCoordinate GetTo()		const { return { (ETileCoord)GetToTileIndex() }; }
+	
 	int32 GetCapturedPiece()		const { return (Move >> 14) & 0xF; }
 	int32 GetPromotedPiece()		const { return (Move >> 20) & 0xF; }
 

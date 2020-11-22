@@ -207,49 +207,49 @@ public:
 		if (FMath::IsWithinInclusive(Index, 21, 28))
 		{
 			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			File = static_cast<EBoardFile>(28 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 31, 38))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Two;
+			File = static_cast<EBoardFile>(38 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 41, 48))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Three;
+			File = static_cast<EBoardFile>(48 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 51, 58))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Four;
+			File = static_cast<EBoardFile>(58 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 61, 68))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Five;
+			File = static_cast<EBoardFile>(68 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 71, 78))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Six;
+			File = static_cast<EBoardFile>(78 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 81, 88))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Seven;
+			File = static_cast<EBoardFile>(88 - Index);
 		}
 
 		if (FMath::IsWithinInclusive(Index, 91, 98))
 		{
-			Rank = EBoardRank::One;
-			File = static_cast<EBoardFile>(Index);
+			Rank = EBoardRank::Eight;
+			File = static_cast<EBoardFile>(98 - Index);
 		}
 	}
 
