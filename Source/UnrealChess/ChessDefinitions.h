@@ -71,24 +71,47 @@ enum class EPieceColor : uint8
 	NoColor
 };
 
-
+/*Basic wrapper over ETileState enum*/
 class UNREALCHESS_API FChessPiece
 {
-	bool bIsBig;
-	bool bIsMajor;
-	bool bIsMinor;
+	//Fast and lightweight chess piece data structure
 
-	int32 Cost;
-	EPieceColor Color;
+	//Is a big piece (non-pawn)
+	const static TArray<bool, TFixedAllocator<13>> BigPieces;
 
+	//Is a major piece (rook or queen)
+	const static TArray<bool, TFixedAllocator<13>> MajorPieces;
+
+	//Is a minor piece (knight or bishop)
+	const static TArray<bool, TFixedAllocator<13>> MinorPieces;
+
+	//Pieces cost
+	const static TArray<int32, TFixedAllocator<13>> PiecesCost;
+
+	//Pieces move directions
+	const static TArray<TArray<int32>, TFixedAllocator<13>> MoveDirections;
+
+	//State
 	ETileState State;
+
+	//Array of white sliding pieces (rook, queen, bishop)
+	static const TArray<FChessPiece> WSlidingPieces;
+
+	//Array of black sliding pieces (rook, queen, bishop)
+	static const TArray<FChessPiece> BSlidingPieces;
+
+	//Array of white non-sliding pieces (knight, king)
+	static const TArray<FChessPiece> WNonSlidingPieces;
+
+	//Array of black non-sliding pieces (knight, king)
+	static const TArray<FChessPiece> BNonSlidingPieces;
 
 public:
 
 	FChessPiece() = default;
 	
-	FChessPiece(EPieceColor Color, ETileState State, bool bIsBig, bool bIsMaj, bool bIsMin, int32 Cost):
-		bIsBig(bIsBig), bIsMajor(bIsMaj), bIsMinor(bIsMin), Cost(Cost), Color(Color), State(State) {}
+	FChessPiece(ETileState State):
+		State(State) {}
 
 	bool operator==(const FChessPiece& Other) const;
 	bool operator!=(const FChessPiece& Other) const;
@@ -116,31 +139,36 @@ public:
 	FORCEINLINE bool IsMajorPiece() const;
 	FORCEINLINE bool IsMinorPiece() const;
 	FORCEINLINE bool IsA(EChessPieceRole Role) const;
-
+	
+	FORCEINLINE const TArray<int32>& GetMoveDirections() const;
+	
+	static const TArray<FChessPiece>& GetSlidingPiecesByColor(EPieceColor Color);
+	static const TArray<FChessPiece>& GetNonSlidingPiecesByColor(EPieceColor Color);
+	
 	static const FChessPiece& GetPieceFromChar(TCHAR Char);
 };
 
 /****Predefined pieces constants****/
 /****************************/
-extern const FChessPiece EmptyChessPiece;
+extern const FChessPiece GEmptyChessPiece;
 
-extern const FChessPiece WhitePawn;
-extern const FChessPiece BlackPawn;
+extern const FChessPiece GWhitePawn;
+extern const FChessPiece GBlackPawn;
 
-extern const FChessPiece WhiteKnight;
-extern const FChessPiece BlackKnight;
+extern const FChessPiece GWhiteKnight;
+extern const FChessPiece GBlackKnight;
 
-extern const FChessPiece WhiteBishop;
-extern const FChessPiece BlackBishop;
+extern const FChessPiece GWhiteBishop;
+extern const FChessPiece GBlackBishop;
 
-extern const FChessPiece WhiteRook;
-extern const FChessPiece BlackRook;
+extern const FChessPiece GWhiteRook;
+extern const FChessPiece GBlackRook;
 
-extern const FChessPiece WhiteQueen;
-extern const FChessPiece BlackQueen;
+extern const FChessPiece GWhiteQueen;
+extern const FChessPiece GBlackQueen;
 
-extern const FChessPiece BlackKing;
-extern const FChessPiece WhiteKing;
+extern const FChessPiece GBlackKing;
+extern const FChessPiece GWhiteKing;
 /****************************/
 
 

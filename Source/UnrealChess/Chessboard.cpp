@@ -28,7 +28,7 @@ AChessboard::AChessboard()
 FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 {
 	const int32 FileIndex = (int32)File;
-	const int32 RankIndex = (int32)Rank;
+	const int32 RankIndex = FTileCoordinate::GetMaxRankIndex() - (int32)Rank;
 
 	FVector FL = BoardMesh->GetSocketLocation("FL");
 
@@ -56,17 +56,18 @@ void AChessboard::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (int32 i = 0; i < 8; ++i)
+	GetChessGameState()->InitBoard(FEN);
+
+	for (int32 i = FTileCoordinate::GetMaxRankIndex(); i >= FTileCoordinate::GetMinRankIndex(); --i)
 	{
-		for (int32 j = 0; j < 8; ++j)
+		for (int32 j = FTileCoordinate::GetMinFileIndex(); j <= FTileCoordinate::GetMaxFileIndex(); ++j)
 		{
 			auto X = static_cast<EBoardRank>(i);
 			auto Y = static_cast<EBoardFile>(j);
 
 			FChessPiece Piece = GetChessGameState()->GetPieceAtTile(Y, X);
 
-			//TODO
-			if (Piece != EmptyChessPiece)
+			if (Piece != GEmptyChessPiece)
 			{
 				FRotator R = GetActorRotation();
 				FTransform T = FTransform{R, GetTileCenter(Y,X)};
@@ -102,11 +103,12 @@ void AChessboard::DrawDebug()
 			auto X = static_cast<EBoardRank>(i);
 			auto Y = static_cast<EBoardFile>(j);
 
-			bool bAttacked = GetChessGameState()->IsSquareAttacked(Y, X, EPieceColor::Black);
+			bool bAttacked = GetChessGameState()->IsTileAttacked(Y, X, EPieceColor::Black);
+			bool bAttackedThem = GetChessGameState()->IsTileAttacked(Y, X, EPieceColor::White);
 
-			DrawDebugPoint(GetWorld(), GetTileCenter(Y, X), 10, 
-				bAttacked ? 
-				FColor::Red : FColor::Emerald
+			DrawDebugPoint(GetWorld(), GetTileCenter(Y, X), 10,
+				bAttacked ?
+				FColor::Black : FColor::Emerald
 			);
 		}
 	}
@@ -119,7 +121,7 @@ void AChessboard::DrawDebug()
 
 void AChessboard::OnConstruction(const FTransform& Transform)
 {
-
+	
 }
 
 // Called every frame

@@ -2,25 +2,81 @@
 
 /***********************************Predefined pieces************************************************/
 
-const FChessPiece EmptyChessPiece{};
+const FChessPiece GEmptyChessPiece{ ETileState::NoPiece};
 
-const FChessPiece WhitePawn{ EPieceColor::White, ETileState::WhitePawn, false, false, false, 100 };
-const FChessPiece BlackPawn{ EPieceColor::Black, ETileState::BlackPawn, false, false, false, 100 };
+const FChessPiece GWhitePawn{ ETileState::WhitePawn };
+const FChessPiece GBlackPawn{ ETileState::BlackPawn };
 
-const FChessPiece WhiteKnight{ EPieceColor::White, ETileState::WhiteKnight, false, false, false, 350 };
-const FChessPiece BlackKnight{ EPieceColor::Black, ETileState::BlackKnight, false, false, false, 350};
+const FChessPiece GWhiteKnight{ ETileState::WhiteKnight};
+const FChessPiece GBlackKnight{ ETileState::BlackKnight};
 
-const FChessPiece WhiteBishop{ EPieceColor::White, ETileState::WhiteBishop, false, false, false, 350 };
-const FChessPiece BlackBishop{ EPieceColor::Black, ETileState::BlackBishop, false, false, false, 350};
+const FChessPiece GWhiteBishop{ ETileState::WhiteBishop};
+const FChessPiece GBlackBishop{ETileState::BlackBishop};
 
-const FChessPiece WhiteRook{ EPieceColor::White, ETileState::WhiteRook, false, false, false, 550};
-const FChessPiece BlackRook{ EPieceColor::Black, ETileState::BlackRook, false, false, false, 550 };
+const FChessPiece GWhiteRook{ETileState::WhiteRook};
+const FChessPiece GBlackRook{ETileState::BlackRook};
 
-const FChessPiece WhiteQueen{ EPieceColor::White, ETileState::WhiteQueen, false, false, false, 1000};
-const FChessPiece BlackQueen{ EPieceColor::Black, ETileState::BlackQueen, false, false, false, 1000 };
+const FChessPiece GWhiteQueen{ ETileState::WhiteQueen};
+const FChessPiece GBlackQueen{ ETileState::BlackQueen};
 
-const FChessPiece BlackKing{ EPieceColor::Black, ETileState::BlackKing, false, false, false, 50000 };
-const FChessPiece WhiteKing{ EPieceColor::White, ETileState::WhiteKing, false, false, false, 50000 };
+const FChessPiece GBlackKing{ ETileState::BlackKing };
+const FChessPiece GWhiteKing{  ETileState::WhiteKing};
+
+const TArray<int32, TFixedAllocator<13>> FChessPiece::PiecesCost = {
+0, 100, 350, 350, 550, 1000, 50000, 100, 350, 350, 550, 1000, 50000
+};
+
+const TArray<bool, TFixedAllocator<13>> FChessPiece::BigPieces = {
+	0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1
+};
+
+const TArray<bool, TFixedAllocator<13>> FChessPiece::MajorPieces = {
+	0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0
+};
+
+const TArray<bool, TFixedAllocator<13>> FChessPiece::MinorPieces = {
+	0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0
+};
+
+const TArray<TArray<int32>, TFixedAllocator<13>> FChessPiece::MoveDirections = {
+	{},
+	{},
+	{-8, -19, -21, -12, 8, 19, 21, 12},
+	{-9, -11, 11, 9},
+	{-1, -10, 1, 10},
+	{-1, -10, 1, 10, -9, -11, 9, 11},
+	{-1, -10, 1, 10, -9, -11, 9, 11},
+	{},
+	{-8, -19, -21, -12, 8, 19, 21, 12},
+	{-9, -11, 11, 9},
+	{-1, -10, 1, 10},
+	{-1, -10, 1, 10, -9, -11, 9, 11},
+	{-1, -10, 1, 10, -9, -11, 9, 11}
+};
+
+const TArray<FChessPiece> FChessPiece::WSlidingPieces = {
+	GWhiteBishop,
+	GWhiteRook,
+	GWhiteQueen
+};
+
+const TArray<FChessPiece> FChessPiece::BSlidingPieces = {
+	GBlackBishop,
+	GBlackRook,
+	GBlackQueen
+};
+
+
+const TArray<FChessPiece> FChessPiece::WNonSlidingPieces = {
+	GWhiteKnight,
+	GWhiteKing
+};
+
+const TArray<FChessPiece> FChessPiece::BNonSlidingPieces = {
+	GBlackKnight,
+	GBlackKing
+};
+
 
 /************************************************************************************************/
 
@@ -44,7 +100,7 @@ int32 FChessPiece::GetCode() const
 
 int32 FChessPiece::GetCost() const
 {
-	return Cost;
+	return PiecesCost[GetCode()];
 }
 
 ETileState FChessPiece::GetEnum() const
@@ -54,27 +110,33 @@ ETileState FChessPiece::GetEnum() const
 
 EPieceColor FChessPiece::GetColor() const
 {
-	return Color;
+	if (FMath::IsWithinInclusive(GetCode(), 1, 6))
+		return EPieceColor::White;
+
+	if (FMath::IsWithinInclusive(GetCode(), 7, 12))
+		return EPieceColor::Black;
+
+	return EPieceColor::NoColor;
 }
 
 int32 FChessPiece::GetColorCode() const
 {
-	return (int32)Color;
+	return (int32)GetColor();
 }
 
 bool FChessPiece::IsBigPiece() const
 {
-	return bIsBig;
+	return BigPieces[GetCode()];
 }
 
 bool FChessPiece::IsMajorPiece() const
 {
-	return bIsMajor;
+	return MajorPieces[GetCode()];
 }
 
 bool FChessPiece::IsMinorPiece() const
 {
-	return bIsMinor;
+	return MinorPieces[GetCode()];
 }
 
 bool FChessPiece::IsA(EChessPieceRole Role) const
@@ -103,40 +165,60 @@ bool FChessPiece::IsA(EChessPieceRole Role) const
 	}
 }
 
+const TArray<int32>& FChessPiece::GetMoveDirections() const
+{
+	return MoveDirections[GetCode()];
+}
+
+const TArray<FChessPiece>& FChessPiece::GetSlidingPiecesByColor(EPieceColor Color)
+{
+	check(Color == EPieceColor::White || Color == EPieceColor::Black);
+
+	return Color == EPieceColor::White ? WSlidingPieces : BSlidingPieces;
+}
+
+const TArray<FChessPiece>& FChessPiece::GetNonSlidingPiecesByColor(EPieceColor Color)
+{
+	check(Color == EPieceColor::White || Color == EPieceColor::Black);
+
+	return Color == EPieceColor::White ? WNonSlidingPieces : BNonSlidingPieces;
+}
+
 const FChessPiece& FChessPiece::GetPieceFromChar(TCHAR Char)
 {
 	switch (Char)
 	{
 	case 'P':
-		return WhitePawn;
+		return GWhitePawn;
 	case 'N':
-		return WhiteKnight;
+		return GWhiteKnight;
 	case 'B':
-		return WhiteBishop;
+		return GWhiteBishop;
 	case 'R':
-		return WhiteRook;
+		return GWhiteRook;
 	case 'Q':
-		return WhiteQueen;
+		return GWhiteQueen;
 	case 'K':
-		return WhiteKing;
+		return GWhiteKing;
 		
 	case 'p':
-		return BlackPawn;
+		return GBlackPawn;
 	case 'n':
-		return BlackKnight;
+		return GBlackKnight;
 	case 'b':
-		return BlackBishop;
+		return GBlackBishop;
 	case 'r':
-		return BlackRook;
+		return GBlackRook;
 	case 'q':
-		return BlackQueen;
+		return GBlackQueen;
 	case 'k':
-		return BlackKing;
+		return GBlackKing;
 
 	default:
-		return EmptyChessPiece;
+		return GEmptyChessPiece;
 	}
 }
+
 
 ETileCoord FTileCoordinate::GetEnum() const
 {

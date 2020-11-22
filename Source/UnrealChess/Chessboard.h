@@ -44,6 +44,9 @@ public:
 	 */
 	TOptional<FVector> GetTileCenter(float X, float Y);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Board state")
+	FString FEN;
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearence", meta=(ClampMin="10"))

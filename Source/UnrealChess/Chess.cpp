@@ -116,8 +116,8 @@ void AChess::InitPiece(const FChessPiece& Piece, AChessboard* Board)
 	}
 
 	//Rotate piece towards other side
-	if (ChessColor == EChessPieceColor::White)
-		AddActorWorldRotation(FRotator{ 0,180,0 });
+	if (ChessColor == EChessPieceColor::Black)
+		AddActorWorldRotation(FRotator{ 0, 180, 0 });
 
 	OwningChessboard = Board;
 	PieceCost = Piece.GetCost();

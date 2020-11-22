@@ -43,12 +43,12 @@ public:
 
 	FORCEINLINE void ClearTile()
 	{
-		ChessPiece = EmptyChessPiece;
+		ChessPiece = GEmptyChessPiece;
 	}
 
 	FORCEINLINE bool IsEmpty() const
 	{
-		return ChessPiece == EmptyChessPiece;
+		return ChessPiece == GEmptyChessPiece;
 	}
 };
 
@@ -135,12 +135,13 @@ class UNREALCHESS_API FChessMove
 {
 	int32 Move = 0;
 	int32 Score = 0;
-	
+
 public:
 
+	static const int32 FLAG_CastlingMove = 0x1000000;
 	static const int32 FLAG_EnPassantMove = 0x40000;
 	static const int32 FLAG_PawnStartMove = 0x80000;
-	static const int32 FLAG_PromotionMove = 0x1000000;
+	//static const int32 FLAG_PromotionMove = 0x1000000;
 
 	FChessMove(
 		const FTileCoordinate& From, 
@@ -190,7 +191,7 @@ public:
 	const FChessPiece& GetPieceAtTile(EBoardFile File, EBoardRank Rank) const;
 
 	//
-	bool IsSquareAttacked(EBoardFile File, EBoardRank Rank, EPieceColor Side);
+	bool IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceColor Side);
 	
 	//
 	void AddQuietMove(const FChessMove& Move);
@@ -200,13 +201,22 @@ public:
 	//
 	void AddWhitePawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To, const FChessPiece& Captured);
 	void AddWhitePawnMove(const FTileCoordinate& From, const FTileCoordinate& To);
-	
+	void AddBlackPawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To, const FChessPiece& Captured);
+	void AddBlackPawnMove(const FTileCoordinate& From, const FTileCoordinate& To);
+
 	void GenerateAllMoves();
 	
 	void BeginPlay() override;
 	
 private:
 
+	void GenerateWhitePawnMoves();
+	void GenerateBlackPawnMoves();
+	void GenerateSlideMoves();
+	void GenerateNonSlideMoves();
+	void GenerateWhiteCastling();
+	void GenerateBlackCastling();
+	
 	//
 	uint64 Bitboard = 0;
 
