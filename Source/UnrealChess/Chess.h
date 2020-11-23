@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ChessDefinitions.h"
+#include "TileCoordinate.h"
 #include "Engine/DataTable.h"
 
 #include "Chess.generated.h"
@@ -57,17 +59,27 @@ public:
 
 	void OnConstruction(const FTransform& Transform) override;
 
+	//IS white?
 	UFUNCTION(BlueprintCallable, Category="Get")
 	bool IsWhite() const;
 
+	//Is black?
 	UFUNCTION(BlueprintCallable, Category="Get")
 	bool IsBlack() const;
+
+	//Get owning chessboard
+	UFUNCTION(BlueprintCallable, Category="Get")
+	AChessboard* GetOwningBoard() const;
 
 	//	UFUNCTION(BlueprintCallable, Category="Get")
 	EChessPieceRole GetPieceRole() const;
 
 	//Init piece from chess piece struct
-	void InitPiece(const FChessPiece& Piece, AChessboard* Board);
+	void InitPiece(const FChessPiece& Piece, const FTileCoordinate& Coord, AChessboard* Board);
+
+	//Get location on the board
+	const FTileCoordinate& GetBoardLocation() const;
+	void SetBoardLocation(const FTileCoordinate& NewLocation);
 
 protected:
 	// Called when the game starts or when spawned
@@ -90,6 +102,9 @@ protected:
 
 	//Update appearance
 	void UpdateMesh();
+
+	//Location
+	FTileCoordinate Location;
 
 public:	
 	// Called every frame

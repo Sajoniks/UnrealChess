@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "ChessMove.h"
 #include "ChessDefinitions.h"
 
 #include "ChessGameStatics.generated.h"
@@ -17,6 +18,18 @@ class UNREALCHESS_API UChessGameStatics : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Get")
+	static bool IsEnPassantMove(const FChessMove& Move);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Get")
+	static bool IsPawnStartMove(const FChessMove& Move);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Get")
+	static bool IsCastlingMove(const FChessMove& Move);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Get")
+	static bool IsCaptureMove(const FChessMove& Move);
 
 	UFUNCTION(BlueprintCallable, Category="Utility")
 	/**Get 120-tile array index from given rank and file

@@ -265,29 +265,3 @@ const FChessPiece& FChessPiece::GetPieceFromCode(int32 Code)
 		return GEmptyChessPiece;
 	}
 }
-
-
-ETileCoord FTileCoordinate::GetEnum() const
-{
-	return Coordinate;
-}
-
-EBoardFile FTileCoordinate::GetFile() const
-{
-	return File;
-}
-
-EBoardRank FTileCoordinate::GetRank() const
-{
-	return Rank;
-}
-
-bool FTileCoordinate::IsValid() const
-{
-	return Coordinate != ETileCoord::NoTile && Rank != EBoardRank::None && File != EBoardFile::None;
-}
-
-int32 FTileCoordinate::ToInt() const
-{
-	return (int32)Coordinate;
-}

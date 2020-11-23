@@ -3,6 +3,26 @@
 
 #include "ChessGameStatics.h"
 
+bool UChessGameStatics::IsEnPassantMove(const FChessMove& Move)
+{
+	return Move.IsEnPassantMove();
+}
+
+bool UChessGameStatics::IsPawnStartMove(const FChessMove& Move)
+{
+	return Move.IsPawnStartMove();
+}
+
+bool UChessGameStatics::IsCastlingMove(const FChessMove& Move)
+{
+	return Move.IsCastlingMove();
+}
+
+bool UChessGameStatics::IsCaptureMove(const FChessMove& Move)
+{
+	return Move.GetCapturedPiece() != GEmptyChessPiece.GetCode();
+}
+
 int32 UChessGameStatics::GetTileIndexAt(EBoardFile File, EBoardRank Rank)
 {
 	return static_cast<int32>(File) + 21 + static_cast<int32>(Rank) * 10;

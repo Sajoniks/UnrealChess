@@ -61,13 +61,20 @@ bool AChess::IsBlack() const
 	return !IsWhite();
 }
 
+AChessboard* AChess::GetOwningBoard() const
+{
+	return OwningChessboard;
+}
+
 EChessPieceRole AChess::GetPieceRole() const
 {
 	return ChessRole;
 }
 
-void AChess::InitPiece(const FChessPiece& Piece, AChessboard* Board)
+void AChess::InitPiece(const FChessPiece& Piece, const FTileCoordinate& Coord, AChessboard* Board)
 {
+	this->Location = Coord;
+	
 	switch(Piece.GetColor())
 	{
 	case EPieceColor::White:
@@ -123,6 +130,16 @@ void AChess::InitPiece(const FChessPiece& Piece, AChessboard* Board)
 	PieceCost = Piece.GetCost();
 
 	UpdateMesh();
+}
+
+const FTileCoordinate& AChess::GetBoardLocation() const
+{
+	return Location;
+}
+
+void AChess::SetBoardLocation(const FTileCoordinate& NewLocation)
+{
+	this->Location = NewLocation;
 }
 
 // Called when the game starts or when spawned

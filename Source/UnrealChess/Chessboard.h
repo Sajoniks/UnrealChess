@@ -2,9 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Tile.h"
+#include "ChessGameState.h"
+#include "ChessMove.h"
 #include "Chessboard.generated.h"
 
-class FTileCoordinate;
+class AChess;
+
 enum class EBoardFile : uint8;
 enum class EBoardRank : uint8;
 
@@ -39,18 +43,28 @@ public:
 	FVector GetTileCenter(EBoardFile File, EBoardRank Rank) const;
 
 	/** Get world tile center location
-	 * @param X World X-coordinate
-	 * @param Y World Y-coordinate
-	 * @return Location of the center of the tile, in world space (if found)
+	 * @param X File coordinate of the board
+	 * @param Y Rank coordinate of the board
+	 * @return Location of the center of the tile, in world space
 	 */
-	TOptional<FVector> GetTileCenter(float X, float Y);
+	UFUNCTION(BlueprintCallable, Category="Get")
+	FVector GetTileCenter(int32 X, int32 Y) const;
+
+	UFUNCTION(BlueprintCallable, Category="Set")
+	void AddSelection(AChess* Chess);
 
 	void Move(const FTileCoordinate& From, const FTileCoordinate& To);
+
+	UFUNCTION(BlueprintCallable, Category="Action")
+	void OnTileClicked(ATile* Tile);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Board state")
 	FString FEN;
 
 protected:
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Event")
+	void OnMove(ATile* From, ATile* To, const FChessMove& Move);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearence", meta=(ClampMin="10"))
 	//Size of the side of the tile in uu
@@ -59,9 +73,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	//TODO
+	UPROPERTY()
+	TArray<ATile*> Tiles;
+	
 	//
 	UFUNCTION(BlueprintCallable, Category="Get")
 	AChessGameState* GetChessGameState() const;
+
+	UPROPERTY()
+	AChess* SelectedChess;
 
 	void DrawDebug();
 

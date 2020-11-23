@@ -5,10 +5,11 @@
 
 #include "Chess.h"
 #include "ChessGameState.h"
-#include "ChessGameStatics.h"
 #include "Components/ArrowComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
+
+
 
 // Sets default values
 AChessboard::AChessboard()
@@ -31,11 +32,16 @@ FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 	const int32 FileIndex = (int32)File;
 	const int32 RankIndex = FTileCoordinate::GetMaxRankIndex() - (int32)Rank;
 
+	return GetTileCenter(RankIndex, FileIndex);
+}
+
+FVector AChessboard::GetTileCenter(int32 X, int32 Y) const
+{
 	FVector FL = BoardMesh->GetSocketLocation("FL");
 
 	FVector Pos = FVector{
-		-(TileSize * RankIndex + TileSize / 2.f),
-		TileSize * FileIndex + TileSize / 2.f,
+		-(TileSize * X + TileSize / 2.f),
+		TileSize * Y + TileSize / 2.f,
 		0
 	};
 
@@ -47,20 +53,72 @@ FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 	return Pos + FL;
 }
 
-TOptional<FVector> AChessboard::GetTileCenter(float X, float Y)
+void AChessboard::AddSelection(AChess* Chess)
 {
-	return TOptional<FVector>();
+	SelectedChess = Chess;
+
+	for (auto&& Tile : Tiles)
+		Tile->SetType(ETileType::NoMove);
+
+	if (Chess)
+	{
+		for (auto&& Move : GetChessGameState()->GetMoves())
+		{
+			if (Chess->GetBoardLocation() == Move.GetFrom())
+			{
+				ATile** Tile = Tiles.FindByPredicate([&Move](ATile* Tile)
+				{
+					return Tile->GetLocation() == Move.GetTo();
+				});
+
+				if (Tile)
+				{
+					if (Move.GetCapturedPiece() != GEmptyChessPiece.GetCode())
+						(*Tile)->SetType(ETileType::Capture);
+					else
+						(*Tile)->SetType(ETileType::Move);
+				}
+			}
+		}
+	}
 }
 
 void AChessboard::Move(const FTileCoordinate& From, const FTileCoordinate& To)
 {
-	GetChessGameState()->GenerateAllMoves();
 	for (auto&& Move : GetChessGameState()->GetMoves())
 	{
 		if (Move.GetFromTileIndex() == From.ToInt() && Move.GetToTileIndex() == To.ToInt())
 		{
-			GetChessGameState()->MakeMove(Move);
+			//TODO
+			if(GetChessGameState()->MakeMove(Move))
+			{
+				int32 FromIdx = GetChessGameState()->GetTileAs64(From.ToInt());
+				int32 ToIdx = GetChessGameState()->GetTileAs64(To.ToInt());
+				
+				ATile* FromTile = Tiles[FromIdx];
+				ATile* ToTile = Tiles[ToIdx];
+
+				OnMove(FromTile, ToTile, Move);
+				
+				ToTile->SetPiece(FromTile->GetPiece());
+				
+				GetChessGameState()->GenerateAllMoves();
+				break;
+			}
 		}
+	}
+}
+
+void AChessboard::OnTileClicked(ATile* Tile)
+{
+	if (SelectedChess)
+	{
+		FTileCoordinate From = SelectedChess->GetBoardLocation();
+		FTileCoordinate To = Tile->GetLocation();
+
+		Move(From, To);
+
+		AddSelection(nullptr);
 	}
 }
 
@@ -70,7 +128,23 @@ void AChessboard::BeginPlay()
 	Super::BeginPlay();
 
 	GetChessGameState()->InitBoard(FEN);
+	Tiles.Reserve(64);
 
+	for (int32 i = 0; i < 8; ++i)
+	{
+		for (int32 j = 0; j < 8; ++j)
+		{
+			auto X = static_cast<EBoardRank>(i);
+			auto Y = static_cast<EBoardFile>(j);
+
+			Tiles.Emplace(GetWorld()->SpawnActor<ATile>());
+			Tiles.Last()->SetActorLocation(GetTileCenter(Y, X));
+			Tiles.Last()->SetLocation(FTileCoordinate{ Y,X });
+			Tiles.Last()->SetType(ETileType::NoMove);
+			Tiles.Last()->SetOwner(this);
+		}
+	}
+	
 	for (int32 i = FTileCoordinate::GetMaxRankIndex(); i >= FTileCoordinate::GetMinRankIndex(); --i)
 	{
 		for (int32 j = FTileCoordinate::GetMinFileIndex(); j <= FTileCoordinate::GetMaxFileIndex(); ++j)
@@ -89,12 +163,16 @@ void AChessboard::BeginPlay()
 						AChess::StaticClass(), T
 					);
 
-				Actor->InitPiece(Piece, this);
+				Actor->InitPiece(Piece, FTileCoordinate{Y,X}, this);
 				
 				Actor->FinishSpawning(T);
+
+				Tiles[GetChessGameState()->GetTileAs64(Actor->GetBoardLocation().ToInt())]->SetPiece(Actor);
 			}
 		}
 	}
+
+	GetChessGameState()->GenerateAllMoves();
 }
 
 AChessGameState* AChessboard::GetChessGameState() const
@@ -108,19 +186,6 @@ void AChessboard::DrawDebug()
 	FVector FR = BoardMesh->GetSocketLocation("FR");
 	FVector BL = BoardMesh->GetSocketLocation("BL");
 	FVector BR = BoardMesh->GetSocketLocation("BR");
-	
-	auto&& Moves = GetChessGameState()->GetMoves();
-	for (int32 i = 0; i < Moves.Num() - 1; i++)
-	{
-		FTileCoordinate From = Moves[i].GetFrom();
-		FTileCoordinate To = Moves[i].GetTo();
-
-		FVector P1 = GetTileCenter(From.GetFile(), From.GetRank());
-		FVector P2 = GetTileCenter(To.GetFile(), To.GetRank());
-		
-		DrawDebugPoint(GetWorld(), P1, 10, FColor::Red);
-		DrawDebugPoint(GetWorld(), P2, 10, FColor::Red);
-	}
 
 	DrawDebugLine(GetWorld(), FL, BL, FColor::Green);
 	DrawDebugLine(GetWorld(), FR, BR, FColor::Green);

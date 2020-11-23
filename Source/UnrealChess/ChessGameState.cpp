@@ -2,7 +2,6 @@
 
 
 #include "ChessGameState.h"
-
 #include "ChessGameStatics.h"
 
 //TODO
@@ -394,7 +393,8 @@ void AChessGameState::ClearPiece(const FTileCoordinate& Coord)
 	int32 PieceCode = Piece.GetCode();
 	int32 Count = PieceCount[PieceCode];
 	int32 TempCount = -1;
-	
+
+	//TODO
 	for (int32 i = 0; i < Count; ++i)
 	{
 		if (PieceList[PieceCode][i] == Coord)
@@ -406,7 +406,7 @@ void AChessGameState::ClearPiece(const FTileCoordinate& Coord)
 
 	check(TempCount != -1);
 
-	--PieceCount[PieceCode];
+	Count = --PieceCount[PieceCode];
 	PieceList[PieceCode][TempCount] = PieceList[PieceCode][Count];
 }
 
@@ -423,7 +423,17 @@ void AChessGameState::AddPiece(const FTileCoordinate& Coord, const FChessPiece& 
 
 	if (Piece.IsBigPiece())
 	{
-		
+		++BigPieces[ColorCode];
+
+		if (Piece.IsMajorPiece())
+		{
+			++MajorPieces[ColorCode];
+		}
+
+		if (Piece.IsMinorPiece())
+		{
+			++MinorPieces[ColorCode];
+		}
 	}
 	else
 	{
@@ -511,11 +521,11 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 	{
 		if (Side == EPieceColor::White)
 		{
-			ClearPiece(Tiles[FromIdx - 10].GetPosition());
+			ClearPiece(Tiles[ToIdx - 10].GetPosition());
 		}
 		else
 		{
-			ClearPiece(Tiles[FromIdx + 10].GetPosition());
+			ClearPiece(Tiles[ToIdx + 10].GetPosition());
 		}
 	}
 	else if (Move.IsCastlingMove())
@@ -613,10 +623,10 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 	if (IsTileAttacked(Kings[SideCode].GetFile(), Kings[SideCode].GetRank(), Side))
 	{
 		TakeMove();
-		return true;
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 const TArray<FChessMove>& AChessGameState::GetMoves() const
