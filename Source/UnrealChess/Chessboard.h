@@ -5,8 +5,10 @@
 #include "Tile.h"
 #include "ChessGameState.h"
 #include "ChessMove.h"
+
 #include "Chessboard.generated.h"
 
+class AChessPlayerController;
 class AChess;
 
 enum class EBoardFile : uint8;
@@ -50,21 +52,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Get")
 	FVector GetTileCenter(int32 X, int32 Y) const;
 
+	//Add chess piece to focus
 	UFUNCTION(BlueprintCallable, Category="Set")
 	void AddSelection(AChess* Chess);
 
-	void Move(const FTileCoordinate& From, const FTileCoordinate& To);
-
+	//Event called on tile click
 	UFUNCTION(BlueprintCallable, Category="Action")
-	void OnTileClicked(ATile* Tile);
+	void OnTileClicked(ATile* Tile, AChessPlayerController* Controller);
 
+	//FEN
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Board state")
-	FString FEN;
+	FString FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+	//Perform move
+	//Called from controller
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Move(int32 From, int32 To);
+	
 protected:
-
+	
+	//Called when piece moved
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
-	void OnMove(ATile* From, ATile* To, const FChessMove& Move);
+	void OnMove(ATile* From, ATile* To, ATile* EnPas, const FChessMove& Move);
+
+	//Called on castling move
+	UFUNCTION(BlueprintImplementableEvent, Category="Event")
+	void OnCastlingMove(ATile* King, ATile* Piece, ATile* KKing, ATile* PPiece);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearence", meta=(ClampMin="10"))
 	//Size of the side of the tile in uu
@@ -73,19 +86,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	//TODO
+	//Array of tile actors
 	UPROPERTY()
 	TArray<ATile*> Tiles;
 	
-	//
 	UFUNCTION(BlueprintCallable, Category="Get")
 	AChessGameState* GetChessGameState() const;
 
+	//Chess in focus
 	UPROPERTY()
 	AChess* SelectedChess;
 
+	//Draw debug lines
 	void DrawDebug();
 
+	//Construction script
 	void OnConstruction(const FTransform& Transform) override;
 	
 public:	

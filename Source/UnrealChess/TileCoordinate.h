@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "ChessDefinitions.h"
 
+#include "TileCoordinate.generated.h"
+
 UENUM()
 //This enum represents tile coordinate
 enum class ETileCoord : uint8
@@ -17,8 +19,12 @@ enum class ETileCoord : uint8
 	A8 = 91, B8, C8, D8, E8, F8, G8, H8, NoTile
 };
 
-class FTileCoordinate
+USTRUCT()
+struct UNREALCHESS_API FTileCoord
 {
+	GENERATED_BODY()
+	
+private:
 	ETileCoord Coordinate;
 
 	EBoardRank Rank;
@@ -26,12 +32,12 @@ class FTileCoordinate
 
 public:
 
-	FTileCoordinate() :
+	FTileCoord() :
 		Coordinate(ETileCoord::NoTile), Rank(EBoardRank::None), File(EBoardFile::None) {}
 
-	FTileCoordinate(ETileCoord Combined);
+	FTileCoord(ETileCoord Combined);
 
-	FTileCoordinate(EBoardFile File, EBoardRank Rank);
+	FTileCoord(EBoardFile File, EBoardRank Rank);
 
 	FORCEINLINE ETileCoord GetEnum() const;
 	FORCEINLINE EBoardFile GetFile() const;
@@ -39,7 +45,7 @@ public:
 
 	FORCEINLINE bool IsValid() const;
 	FORCEINLINE int32 ToInt() const;
-	FORCEINLINE bool operator==(const FTileCoordinate& Other) const;
+	FORCEINLINE bool operator==(const FTileCoord& Other) const;
 
 	static EBoardRank ToRank(int32 Int);
 	static EBoardFile ToFile(int32 Int);
@@ -49,32 +55,32 @@ public:
 	static int32 GetMaxFileIndex();
 };
 
-ETileCoord FTileCoordinate::GetEnum() const
+ETileCoord FTileCoord::GetEnum() const
 {
 	return Coordinate;
 }
 
-EBoardFile FTileCoordinate::GetFile() const
+EBoardFile FTileCoord::GetFile() const
 {
 	return File;
 }
 
-EBoardRank FTileCoordinate::GetRank() const
+EBoardRank FTileCoord::GetRank() const
 {
 	return Rank;
 }
 
-bool FTileCoordinate::IsValid() const
+bool FTileCoord::IsValid() const
 {
 	return Coordinate != ETileCoord::NoTile && Rank != EBoardRank::None && File != EBoardFile::None;
 }
 
-int32 FTileCoordinate::ToInt() const
+int32 FTileCoord::ToInt() const
 {
 	return (int32)Coordinate;
 }
 
-bool FTileCoordinate::operator==(const FTileCoordinate& Other) const
+bool FTileCoord::operator==(const FTileCoord& Other) const
 {
 	if (this == &Other)
 		return true;

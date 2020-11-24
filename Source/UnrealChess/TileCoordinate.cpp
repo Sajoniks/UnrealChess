@@ -1,7 +1,7 @@
 
 #include "TileCoordinate.h"
 
-FTileCoordinate::FTileCoordinate(ETileCoord Combined):
+FTileCoord::FTileCoord(ETileCoord Combined):
 	Coordinate(Combined), Rank(), File()
 {
 	if (Combined == ETileCoord::NoTile)
@@ -63,38 +63,38 @@ FTileCoordinate::FTileCoordinate(ETileCoord Combined):
 	}
 }
 
-FTileCoordinate::FTileCoordinate(EBoardFile File, EBoardRank Rank):
+FTileCoord::FTileCoord(EBoardFile File, EBoardRank Rank):
 	Coordinate(), Rank(Rank), File(File)
 {
 	Coordinate = static_cast<ETileCoord>(21 + (int32)Rank * 10 + (int32)File);
 }
 
-EBoardRank FTileCoordinate::ToRank(int32 Int)
+EBoardRank FTileCoord::ToRank(int32 Int)
 {
 	return static_cast<EBoardRank>(Int);
 }
 
-EBoardFile FTileCoordinate::ToFile(int32 Int)
+EBoardFile FTileCoord::ToFile(int32 Int)
 {
 	return static_cast<EBoardFile>(Int);
 }
 
-int32 FTileCoordinate::GetMinRankIndex()
+int32 FTileCoord::GetMinRankIndex()
 {
 	return (int32)EBoardRank::One;
 }
 
-int32 FTileCoordinate::GetMaxRankIndex()
+int32 FTileCoord::GetMaxRankIndex()
 {
 	return (int32)EBoardRank::Eight;
 }
 
-int32 FTileCoordinate::GetMinFileIndex()
+int32 FTileCoord::GetMinFileIndex()
 {
 	return (int32)EBoardFile::A;
 }
 
-int32 FTileCoordinate::GetMaxFileIndex()
+int32 FTileCoord::GetMaxFileIndex()
 {
 	return (int32)EBoardFile::H;
 }

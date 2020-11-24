@@ -3,6 +3,8 @@
 
 #include "ChessGameStatics.h"
 
+#include "Kismet/GameplayStatics.h"
+
 bool UChessGameStatics::IsEnPassantMove(const FChessMove& Move)
 {
 	return Move.IsEnPassantMove();

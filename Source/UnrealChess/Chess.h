@@ -75,11 +75,11 @@ public:
 	EChessPieceRole GetPieceRole() const;
 
 	//Init piece from chess piece struct
-	void InitPiece(const FChessPiece& Piece, const FTileCoordinate& Coord, AChessboard* Board);
+	void InitPiece(const FChessPiece& Piece, const FTileCoord& Coord, AChessboard* Board);
 
 	//Get location on the board
-	const FTileCoordinate& GetBoardLocation() const;
-	void SetBoardLocation(const FTileCoordinate& NewLocation);
+	const FTileCoord& GetBoardLocation() const;
+	void SetBoardLocation(const FTileCoord& NewLocation);
 
 protected:
 	// Called when the game starts or when spawned
@@ -104,7 +104,7 @@ protected:
 	void UpdateMesh();
 
 	//Location
-	FTileCoordinate Location;
+	FTileCoord Location;
 
 public:	
 	// Called every frame

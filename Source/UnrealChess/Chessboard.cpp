@@ -5,6 +5,8 @@
 
 #include "Chess.h"
 #include "ChessGameState.h"
+#include "ChessGameStatics.h"
+#include "ChessPlayerController.h"
 #include "Components/ArrowComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -30,7 +32,7 @@ AChessboard::AChessboard()
 FVector AChessboard::GetTileCenter(EBoardFile File, EBoardRank Rank) const
 {
 	const int32 FileIndex = (int32)File;
-	const int32 RankIndex = FTileCoordinate::GetMaxRankIndex() - (int32)Rank;
+	const int32 RankIndex = FTileCoord::GetMaxRankIndex() - (int32)Rank;
 
 	return GetTileCenter(RankIndex, FileIndex);
 }
@@ -83,24 +85,59 @@ void AChessboard::AddSelection(AChess* Chess)
 	}
 }
 
-void AChessboard::Move(const FTileCoordinate& From, const FTileCoordinate& To)
-{
+void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
+{	
 	for (auto&& Move : GetChessGameState()->GetMoves())
 	{
-		if (Move.GetFromTileIndex() == From.ToInt() && Move.GetToTileIndex() == To.ToInt())
+		if (Move.GetFromTileIndex() == From && Move.GetToTileIndex() == To)
 		{
-			//TODO
-			if(GetChessGameState()->MakeMove(Move))
+			if (GetChessGameState()->MakeMove(Move))
 			{
-				int32 FromIdx = GetChessGameState()->GetTileAs64(From.ToInt());
-				int32 ToIdx = GetChessGameState()->GetTileAs64(To.ToInt());
-				
+				int32 FromIdx = GetChessGameState()->GetTileAs64(From);
+				int32 ToIdx = GetChessGameState()->GetTileAs64(To);
+
 				ATile* FromTile = Tiles[FromIdx];
 				ATile* ToTile = Tiles[ToIdx];
 
-				OnMove(FromTile, ToTile, Move);
-				
+				if (HasAuthority())
+				{
+					UE_LOG(LogGameState, Display, TEXT("Move performed on server"));
+				}
+				else
+				{
+					UE_LOG(LogGameState, Display, TEXT("Move performed on client"));
+
+					//Update visuals
+					if (UChessGameStatics::IsCastlingMove(Move))
+					{
+						//TODO	
+					}
+					else if (UChessGameStatics::IsEnPassantMove(Move))
+					{
+						int32 EnPas;
+						
+						if (GetChessGameState()->GetSide() == EPieceColor::White)
+						{
+							EnPas = To + 10;
+						}
+						else
+						{
+							EnPas = To - 10;
+						}
+						
+						EnPas = GetChessGameState()->GetTileAs64(EnPas);
+						ATile* EnPasTile = Tiles[EnPas];
+						
+						OnMove(FromTile, ToTile, EnPasTile, Move);
+					}
+					else
+					{
+						OnMove(FromTile, ToTile, nullptr, Move);
+					}
+				}
+
 				ToTile->SetPiece(FromTile->GetPiece());
+				FromTile->SetPiece(nullptr);
 				
 				GetChessGameState()->GenerateAllMoves();
 				break;
@@ -109,14 +146,25 @@ void AChessboard::Move(const FTileCoordinate& From, const FTileCoordinate& To)
 	}
 }
 
-void AChessboard::OnTileClicked(ATile* Tile)
+
+void AChessboard::OnTileClicked(ATile* Tile, AChessPlayerController* Controller)
 {
 	if (SelectedChess)
 	{
-		FTileCoordinate From = SelectedChess->GetBoardLocation();
-		FTileCoordinate To = Tile->GetLocation();
+		EPieceColor MovingSide = GetChessGameState()->GetSide();
+		EPieceColor PlayerSide = Controller->GetSide();
 
-		Move(From, To);
+
+		//Whites can't move blacks 
+		if (MovingSide == PlayerSide)
+		{
+			FTileCoord From = SelectedChess->GetBoardLocation();
+			FTileCoord To = Tile->GetLocation();
+			
+			//Run move logic on server
+			//Controller is a dirty trick
+			Controller->Server_NotifyPlayerMoved(this, From.ToInt(), To.ToInt());
+		}
 
 		AddSelection(nullptr);
 	}
@@ -139,15 +187,15 @@ void AChessboard::BeginPlay()
 
 			Tiles.Emplace(GetWorld()->SpawnActor<ATile>());
 			Tiles.Last()->SetActorLocation(GetTileCenter(Y, X));
-			Tiles.Last()->SetLocation(FTileCoordinate{ Y,X });
+			Tiles.Last()->SetLocation(FTileCoord{ Y,X });
 			Tiles.Last()->SetType(ETileType::NoMove);
 			Tiles.Last()->SetOwner(this);
 		}
 	}
 	
-	for (int32 i = FTileCoordinate::GetMaxRankIndex(); i >= FTileCoordinate::GetMinRankIndex(); --i)
+	for (int32 i = FTileCoord::GetMaxRankIndex(); i >= FTileCoord::GetMinRankIndex(); --i)
 	{
-		for (int32 j = FTileCoordinate::GetMinFileIndex(); j <= FTileCoordinate::GetMaxFileIndex(); ++j)
+		for (int32 j = FTileCoord::GetMinFileIndex(); j <= FTileCoord::GetMaxFileIndex(); ++j)
 		{
 			auto X = static_cast<EBoardRank>(i);
 			auto Y = static_cast<EBoardFile>(j);
@@ -163,7 +211,7 @@ void AChessboard::BeginPlay()
 						AChess::StaticClass(), T
 					);
 
-				Actor->InitPiece(Piece, FTileCoordinate{Y,X}, this);
+				Actor->InitPiece(Piece, FTileCoord{Y,X}, this);
 				
 				Actor->FinishSpawning(T);
 

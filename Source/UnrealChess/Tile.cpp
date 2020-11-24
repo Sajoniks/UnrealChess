@@ -38,6 +38,7 @@ void ATile::SetType(ETileType Type)
 		TileMesh->SetMaterial(0, Mat);
 
 		GetRootComponent()->SetVisibility(true, true);
+		SetActorEnableCollision(true);
 		break;
 		
 	case ETileType::Capture:
@@ -45,14 +46,16 @@ void ATile::SetType(ETileType Type)
 		TileMesh->SetMaterial(0, Mat);
 		
 		GetRootComponent()->SetVisibility(true, true);
+		SetActorEnableCollision(true);
 		break;
 		
 	case ETileType::NoMove:
 		GetRootComponent()->SetVisibility(false, true);
+		SetActorEnableCollision(false);
 	}
 }
 
-void ATile::SetLocation(const FTileCoordinate& Coordinate)
+void ATile::SetLocation(const FTileCoord& Coordinate)
 {
 	this->Coord = Coordinate;
 }
@@ -65,7 +68,7 @@ void ATile::SetPiece(AChess* NewChess)
 		Chess->SetBoardLocation(GetLocation());
 }
 
-const FTileCoordinate& ATile::GetLocation() const
+const FTileCoord& ATile::GetLocation() const
 {
 	return Coord;
 }

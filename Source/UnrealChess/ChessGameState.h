@@ -2,152 +2,19 @@
 
 #pragma once
 
+#include "ChessDefinitions.h"
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "ChessDefinitions.h"
-#include "DataTableEditor/Private/SRowEditor.h"
-#include "ChessMoveRecord.h"
 #include "TileCoordinate.h"
 #include "ChessMove.h"
+#include "ChessMoveRecord.h"
+#include "ChessBoardTile.h"
 
 #include "ChessGameState.generated.h"
 
+class AChessboard;
 class UDataTable;
 
-USTRUCT(BlueprintType)
-struct FChessPieceCost : public FTableRowBase
-{
-	GENERATED_BODY()
-
-		UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float Cost;
-};
-
-//TODO Try refactoring some field into player state
-//TODO JUST REFACTOR THIS CRAP
-
-class FChessTileState
-{
-	FChessPiece ChessPiece;
-
-public:
-
-	FChessTileState() = default;
-
-	FORCEINLINE const FChessPiece& GetChessPiece() const
-	{
-		return ChessPiece;
-	}
-
-	FORCEINLINE void SetPiece(const FChessPiece& Piece) 
-	{
-		ChessPiece = Piece;
-	}
-
-	FORCEINLINE void ClearTile()
-	{
-		ChessPiece = GEmptyChessPiece;
-	}
-
-	FORCEINLINE bool IsEmpty() const
-	{
-		return ChessPiece == GEmptyChessPiece;
-	}
-};
-
-class FChessBoardTile
-{
-	//State of tile
-	FChessTileState State;
-
-	//Coords
-	FTileCoordinate Coords;
-
-	//Castle permission value
-	int32 CastlePermission = 15;
-
-public:
-
-	FChessBoardTile() = default;
-	FChessBoardTile(int32 Value):
-		State(), Coords(ETileCoord::NoTile), CastlePermission(Value)
-	{}
-
-	FORCEINLINE void Reset()
-	{
-		State.ClearTile();
-		Coords = {};
-	}
-
-	FORCEINLINE const FChessTileState& GetState() const
-	{
-		return State;
-	}
-
-	FORCEINLINE void SetPiece(const FChessPiece& Piece)
-	{
-		State.SetPiece(Piece);
-	}
-
-	//Get combined tile position
-	FORCEINLINE const FTileCoordinate& GetPosition() const
-	{
-		return Coords;
-	}
-
-	FORCEINLINE void SetPosition(const FTileCoordinate& Coordinate)
-	{
-		Coords = Coordinate;
-	}
-
-	FORCEINLINE void SetPosition(const EBoardFile& File, const EBoardRank& Rank)
-	{
-		SetPosition({File, Rank});
-	}
-
-	FORCEINLINE int32 GetCastlePermission() const
-	{
-		return CastlePermission;
-	}
-
-	//Converted file coordinate to int32
-	FORCEINLINE int32 GetFileAsInt() const { return (int32)Coords.GetFile(); }
-
-	//Converted rank coordinate to int32
-	FORCEINLINE int32 GetRankAsInt() const { return (int32)Coords.GetRank(); }
-
-	//Piece code
-	FORCEINLINE int32 GetPieceAsInt() const { return State.GetChessPiece().GetCode(); }
-
-	//Color code
-	FORCEINLINE int32 GetColorAsInt() const { return State.GetChessPiece().GetColorCode(); }
-
-	//Check if tile has given Piece (not empty and equal to it)
-	FORCEINLINE bool HasPiece(const FChessPiece& Piece) const
-	{
-		return !IsOnBoard() && !IsEmpty() && State.GetChessPiece() == Piece;
-	}
-
-	FORCEINLINE const FChessPiece& GetPiece() const
-	{
-		return State.GetChessPiece();
-	}
-
-	//Check if this tile is not playable
-	FORCEINLINE bool IsOnBoard() const
-	{
-		return Coords.IsValid();
-	}
-
-	FORCEINLINE bool IsEmpty() const
-	{
-		return State.IsEmpty();
-	}
-};
-
-/**
- * 
- */
 UCLASS(CustomConstructor)
 class UNREALCHESS_API AChessGameState : public AGameStateBase
 {
@@ -157,84 +24,87 @@ public:
 
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
 
+	//Set moving side
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, Category = "Set")
+	void SetMovingSide(EPieceColor NewSide);
+
+	//Get moving side
+	UFUNCTION(BlueprintCallable, Category="Get")
+	EPieceColor GetSide() const;
+
+	//Init board layout from the FEN string
 	void InitBoard(const FString& FEN);
 
-	EPieceColor GetMovingSide() const;
-
-	//
+	//Get chess piece at index
 	const FChessPiece& GetPieceAtTile(EBoardFile File, EBoardRank Rank) const;
 
-	//
+	//Is tile attacked at index
 	bool IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceColor Side);
 	
-	//
+	//Add basic moves
 	void AddQuietMove(const FChessMove& Move);
 	void AddCaptureMove(const FChessMove& Move);
 	void AddEnPassantMove(const FChessMove& Move);
 
-	//
-	void AddWhitePawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To, const FChessPiece& Captured);
-	void AddWhitePawnMove(const FTileCoordinate& From, const FTileCoordinate& To);
-	void AddBlackPawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To, const FChessPiece& Captured);
-	void AddBlackPawnMove(const FTileCoordinate& From, const FTileCoordinate& To);
+	//Add pawn moves because they are tricky
+	void AddWhitePawnCaptureMove(const FTileCoord& From, const FTileCoord& To, const FChessPiece& Captured);
+	void AddWhitePawnMove(const FTileCoord& From, const FTileCoord& To);
+	void AddBlackPawnCaptureMove(const FTileCoord& From, const FTileCoord& To, const FChessPiece& Captured);
+	void AddBlackPawnMove(const FTileCoord& From, const FTileCoord& To);
 
+	//All pieces move generation
+	UFUNCTION(NetMulticast, Reliable)
 	void GenerateAllMoves();
+	
+	//Move related functions
+	void ClearPiece(const FTileCoord& Coord);
+	void AddPiece(const FTileCoord& Coord, const FChessPiece& Piece);
+	void MovePiece(const FTileCoord& From, const FTileCoord& To);
 
-	void ClearPiece(const FTileCoordinate& Coord);
-	void AddPiece(const FTileCoordinate& Coord, const FChessPiece& Piece);
-	void MovePiece(const FTileCoordinate& From, const FTileCoordinate& To);
+	//Main move functions
+	//
+	//Revert move (Undo)
 	void TakeMove();
+	//Make move (Do)
 	bool MakeMove(const FChessMove& Move);
 
+	//Restart
+	void ResetBoard();
+
+	//Get current moves for moving side
 	const TArray<FChessMove>& GetMoves() const;
-	
-	void BeginPlay() override;
-
-	int32 GetTileAs64(int32 Tile120);
-	int32 GetTileAs120(int32 Tile64);
-	
-private:
-
-	void GenerateWhitePawnMoves();
-	void GenerateBlackPawnMoves();
-	void GenerateSlideMoves();
-	void GenerateNonSlideMoves();
-	void GenerateWhiteCastling();
-	void GenerateBlackCastling();
-
-	void HashPiece(const FChessPiece& Piece, const FTileCoordinate& Coord);
-	void HashCastle();
-	void HashSide();
-	void HashEnPassant();
 
 	//
-	uint64 Bitboard = 0;
+	void BeginPlay() override;
+
+	//Index converters
+	//
+	int32 GetTileAs64(int32 Tile120);
+	int32 GetTileAs120(int32 Tile64);
+
+	//Tile where en passant move is active
+	TOptional<int32> EnPassantTile = 0;
+	
+private:
 
 	//All tiles
 	TStaticArray<FChessBoardTile, 120> Tiles{ };
 
+	//Moves
+	TArray<FChessMove> Moves;
+
+	//For faster move generation
+	//Piece list
+	TStaticArray<TStaticArray<FTileCoord, 10>, 13> PieceList{ };
+	
 	//Pawns locations
 	TStaticArray<uint64, 3> Pawns{ 0 };
 
 	//King pieces positions
-	TStaticArray<FTileCoordinate, 2> Kings{ };
+	TStaticArray<FTileCoord, 2> Kings{ };
 
 	//The side that needs to make a move
 	EPieceColor Side = EPieceColor::Both;
-	
-	//Tile where en passant move is active
-	TOptional<int32> EnPassantTile = 0;
-
-	//Counter that detects 50 move (100 half-move), when game is a draw
-	int32 FiftyMoveCounter = 0;
-	
-	//TODO move fields to the player state
-	
-	//White half-moves count
-	int32 Ply = 0;
-	
-	//Black half-moves count
-	int32 HisPly = 0;
 
 	//Total count of each chess piece, including empty tiles
 	//13 is a count of chess piece types by each color plus empty tiles count
@@ -252,66 +122,54 @@ private:
 	//Total values of pieces by color
 	TStaticArray<int32, 2> Material;
 
-	void UpdateListsMaterial();
-
-	uint64 PosHashKey = 0;
-
 	//Tells which castle is available
 	int32 CastlePermission = 0;
 	
+	//Move generator helpers
 	//
-	TArray<FChessMoveRecord> History;
+	void GenerateWhitePawnMoves();
+	void GenerateBlackPawnMoves();
+	void GenerateSlideMoves();
+	void GenerateNonSlideMoves();
+	void GenerateWhiteCastling();
+	void GenerateBlackCastling();
 
-	//
-	TArray<FChessMove> Moves;
-
-	/*Some helper arrays to handle 120-tile indexing and 64-tile indexing*/
-	/*Too low level, need refactor TODO*/
+	//Calculate total material
+	void UpdateListsMaterial();
 	
+	//Hashing related functions
+	//Will be used in history
+	//
+	void HashPiece(const FChessPiece& Piece, const FTileCoord& Coord);
+	void HashCastle();
+	void HashSide();
+	void HashEnPassant();
+
+	TStaticArray<TStaticArray<uint64, 120>, 13> PieceHashKeys{ TStaticArray<uint64, 120>{0} };
+	TStaticArray<uint64, 16> CastleHashKeys{ 0 };
+	uint64 SideHashKey = 0;
+	uint64 PosHashKey = 0;
+
+	void MakeHashKeys();
+	uint64 GeneratePositionHashKey();
+
+	//Converter arrays
+	//
 	TStaticArray<int32, 120> Array120To64Converter{ 0 };
 	TStaticArray<int32, 64> Array64To120Converter{ 0 };
 
+	//Init converter arrays
 	void MakeConverterArray_120To64();
 
-	/****************************************************/
+	//Main bitboard
+	uint64 Bitboard = 0;
 
-	//Move directions for pieces
-	//TODO
-	TArray<int32, TFixedAllocator<8>> KnightDir = {-8, -19, -21, -12, 8, 10, 21, 12};
-	TArray<int32, TFixedAllocator<4>> RookDir = { -1, -10, 1, 10 };
-	TArray<int32, TFixedAllocator<4>> BishopDir = { -9, -11, 11, 9 };
-	TArray<int32, TFixedAllocator<8>> KingDir = { -1, -10, 1, 10, -9, -11, 11, 9 };
-	
-	//For faster move generation
-	//Piece list
-	TStaticArray<TStaticArray<FTileCoordinate, 10>, 13> PieceList{ };
-
-	//Cached values of ranks and files
-	TStaticArray<EBoardFile, 120> BoardFiles;
-	TStaticArray<EBoardRank, 120> BoardRanks;
-
-	void MakeFilesRanksArrays();
-	
-	/**/
-
-	//See definition on www.chessprogrammingwiki.com
-	TArray<int32> BitTable = {
-		63, 10, 3, 32, 25, 41, 22, 33, 15, 50, 42, 13, 11, 53, 19, 34, 61, 29, 2,
-		51, 21, 43, 45, 10, 18, 47, 1, 54, 9, 57, 0, 35, 62, 31, 40, 4, 49, 5, 52,
-		26, 60, 6, 23, 44, 46, 27, 56, 16, 7, 39, 48, 24, 59, 14, 12, 55, 38, 28,
-		58, 20, 37, 17, 36, 8
-	};
-
+	//Masks
+	//
 	TStaticArray<uint64, 64> SetMask{ 0 };
 	TStaticArray<uint64, 64> ClearMask{ 0 };
 
 	void MakeBitMasks();
-	
-	TStaticArray<TStaticArray<uint64, 120>, 13> PieceHashKeys{TStaticArray<uint64, 120>{0}};
-	TStaticArray<uint64, 16> CastleHashKeys{0};
-	uint64 SideHashKey = 0;
-
-	void MakeHashKeys();
 
 	//Takes first bit, starting from the least significant bit, returns its index and sets it to zero
 	int32 PopBit();
@@ -325,11 +183,24 @@ private:
 	//Sets bit to 1 at given tile
 	void SetBit(uint64& BitBoard, int32 Idx);
 
-	uint64 GeneratePositionHashKey();
+	
+	/*****************Going to the WIP section*****************/
 
-	/**/
-
-	void ResetBoard();
+	//Counter that detects 50 move (100 half-move), when game is a draw
+	int32 FiftyMoveCounter = 0;
+	
+	//
+	TArray<FChessMoveRecord> History;
+	
+	//See definition on www.chessprogrammingwiki.com
+	TArray<int32> BitTable = {
+		63, 10, 3, 32, 25, 41, 22, 33, 15, 50, 42, 13, 11, 53, 19, 34, 61, 29, 2,
+		51, 21, 43, 45, 10, 18, 47, 1, 54, 9, 57, 0, 35, 62, 31, 40, 4, 49, 5, 52,
+		26, 60, 6, 23, 44, 46, 27, 56, 16, 7, 39, 48, 24, 59, 14, 12, 55, 38, 28,
+		58, 20, 37, 17, 36, 8
+	};
+	
+	/****************************************************/
 };
 
 /* Game Move Encoding */

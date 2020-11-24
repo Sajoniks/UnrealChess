@@ -3,25 +3,33 @@
 
 #include "ChessGameState.h"
 #include "ChessGameStatics.h"
+#include "Chessboard.h"
 
-//TODO
-//Think about InitBoard location
 AChessGameState::AChessGameState(const FObjectInitializer& ObjectInitializer)
 {
 	//Update castling permissions
-	Tiles[FTileCoordinate{ ETileCoord::A1 }.ToInt()] = { 13 };
-	Tiles[FTileCoordinate{ ETileCoord::E1 }.ToInt()] = { 12 };
-	Tiles[FTileCoordinate{ ETileCoord::H1 }.ToInt()] = { 14 };
-	
-	Tiles[FTileCoordinate{ ETileCoord::A8 }.ToInt()] = { 7 };
-	Tiles[FTileCoordinate{ ETileCoord::E8 }.ToInt()] = { 3 };
-	Tiles[FTileCoordinate{ ETileCoord::H8 }.ToInt()] = { 11 };
-	
+	Tiles[FTileCoord{ETileCoord::A1}.ToInt()] = {13};
+	Tiles[FTileCoord{ETileCoord::E1}.ToInt()] = {12};
+	Tiles[FTileCoord{ETileCoord::H1}.ToInt()] = {14};
+
+	Tiles[FTileCoord{ETileCoord::A8}.ToInt()] = {7};
+	Tiles[FTileCoord{ETileCoord::E8}.ToInt()] = {3};
+	Tiles[FTileCoord{ETileCoord::H8}.ToInt()] = {11};
+
 	MakeBitMasks();
 	MakeHashKeys();
 
 	MakeConverterArray_120To64();
-	MakeFilesRanksArrays();
+}
+
+void AChessGameState::SetMovingSide_Implementation(EPieceColor NewSide)
+{
+	Side = NewSide;
+}
+
+EPieceColor AChessGameState::GetSide() const
+{
+	return Side;
 }
 
 void AChessGameState::InitBoard(const FString& FEN)
@@ -43,13 +51,14 @@ void AChessGameState::InitBoard(const FString& FEN)
 			if (LeftPart.ParseIntoArray(Parsed, TEXT("/"), true))
 			{
 				EBoardRank Rank = EBoardRank::Eight;
-				
+
 				for (auto&& Row : Parsed)
 				{
 					EBoardFile File = EBoardFile::A;
-					
+
 					for (auto&& Char : Row)
-					{//Number of pieces encoded in single character
+					{
+						//Number of pieces encoded in single character
 						int32 Count = 1;
 
 						FChessPiece Piece = FChessPiece::GetPieceFromChar(Char);
@@ -74,32 +83,36 @@ void AChessGameState::InitBoard(const FString& FEN)
 							Tiles[Tile120].SetPiece(Piece);
 							Tiles[Tile120].SetPosition(File, Rank);
 
-							File = static_cast<EBoardFile>((int32)File + 1);
+							File = static_cast<EBoardFile>(static_cast<int32>(File) + 1);
 						}
 					}
 
-					Rank = static_cast<EBoardRank>((int32)Rank - 1);
+					Rank = static_cast<EBoardRank>(static_cast<int32>(Rank) - 1);
 				}
 
 				//Secondly parse state
 				if (RightPart.ParseIntoArrayWS(Parsed, nullptr, true))
 				{
 					//First parsed character is the side which makes move
-					Side = Parsed[0].Equals("w") ? EPieceColor::White : EPieceColor::Black;
+					Parsed[0].Equals("w") ? SetMovingSide(EPieceColor::White) : SetMovingSide(EPieceColor::Black);
 
 					if (!Parsed[1].Equals("-"))
 					{
 						for (auto&& Char : Parsed[1])
 						{
-							switch(Char)
+							switch (Char)
 							{
-								case 'K': CastlePermission |= static_cast<int32>(ECastlingType::WhiteKing); break;
-								case 'Q': CastlePermission |= static_cast<int32>(ECastlingType::WhiteQueen); break;
-								case 'k': CastlePermission |= static_cast<int32>(ECastlingType::BlackKing); break;
-								case 'q': CastlePermission |= static_cast<int32>(ECastlingType::BlackQueen); break;
+							case 'K': CastlePermission |= static_cast<int32>(ECastlingType::WhiteKing);
+								break;
+							case 'Q': CastlePermission |= static_cast<int32>(ECastlingType::WhiteQueen);
+								break;
+							case 'k': CastlePermission |= static_cast<int32>(ECastlingType::BlackKing);
+								break;
+							case 'q': CastlePermission |= static_cast<int32>(ECastlingType::BlackQueen);
+								break;
 
-								default:
-									break;
+							default:
+								break;
 							}
 						}
 					}
@@ -111,7 +124,6 @@ void AChessGameState::InitBoard(const FString& FEN)
 					}
 
 					PosHashKey = GeneratePositionHashKey();
-
 				}
 			}
 
@@ -123,11 +135,6 @@ void AChessGameState::InitBoard(const FString& FEN)
 			GenerateAllMoves();
 		}
 	}
-}
-
-EPieceColor AChessGameState::GetMovingSide() const
-{
-	return Side;
 }
 
 const FChessPiece& AChessGameState::GetPieceAtTile(EBoardFile File, EBoardRank Rank) const
@@ -145,7 +152,7 @@ bool AChessGameState::IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceCol
 		if (
 			Tiles[TileIdx - 11].GetPiece() == GWhitePawn ||
 			Tiles[TileIdx - 9].GetPiece() == GWhitePawn
-			)
+		)
 		{
 			return true;
 		}
@@ -155,7 +162,7 @@ bool AChessGameState::IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceCol
 		if (
 			Tiles[TileIdx + 11].GetPiece() == GBlackPawn ||
 			Tiles[TileIdx + 9].GetPiece() == GBlackPawn
-			)
+		)
 		{
 			return true;
 		}
@@ -165,10 +172,10 @@ bool AChessGameState::IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceCol
 	for (auto&& Direction : GWhiteKnight.GetMoveDirections())
 	{
 		const FChessPiece& Piece = Tiles[TileIdx + Direction].GetPiece();
-		
-		if (Piece.IsA(EChessPieceRole::Knight) && 
+
+		if (Piece.IsA(EChessPieceRole::Knight) &&
 			Piece.GetColor() == MovingSide
-			)
+		)
 		{
 			return true;
 		}
@@ -180,17 +187,17 @@ bool AChessGameState::IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceCol
 		int32 TileTemp = TileIdx + Direction;
 		FChessBoardTile Tile = Tiles[TileTemp];
 
-		while(Tile.IsOnBoard())
+		while (Tile.IsOnBoard())
 		{
 			if (!Tile.IsEmpty())
 			{
 				const FChessPiece& Piece = Tile.GetPiece();
-				
+
 				if (
-					(Piece.IsA(EChessPieceRole::Rook) || 
-					 Piece.IsA(EChessPieceRole::Queen)) &&
-					 Piece.GetColor() == MovingSide
-					)
+					(Piece.IsA(EChessPieceRole::Rook) ||
+						Piece.IsA(EChessPieceRole::Queen)) &&
+					Piece.GetColor() == MovingSide
+				)
 				{
 					return true;
 				}
@@ -217,9 +224,9 @@ bool AChessGameState::IsTileAttacked(EBoardFile File, EBoardRank Rank, EPieceCol
 				const FChessPiece& Piece = Tile.GetPiece();
 				if (
 					(Piece.IsA(EChessPieceRole::Bishop) ||
-					Piece.IsA(EChessPieceRole::Queen)) &&
+						Piece.IsA(EChessPieceRole::Queen)) &&
 					Piece.GetColor() == MovingSide
-					)
+				)
 				{
 					return true;
 				}
@@ -261,71 +268,69 @@ void AChessGameState::AddEnPassantMove(const FChessMove& Move)
 	Moves.Emplace(Move);
 }
 
-void AChessGameState::AddWhitePawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To,
-	const FChessPiece& Captured)
-{	
+void AChessGameState::AddWhitePawnCaptureMove(const FTileCoord& From, const FTileCoord& To,
+                                              const FChessPiece& Captured)
+{
 	if (From.GetRank() == EBoardRank::Seven)
 	{
 		AddCaptureMove({From, To, &Captured, &GWhiteQueen});
-		AddCaptureMove({ From, To, &Captured, &GWhiteRook});
-		AddCaptureMove({ From, To, &Captured, &GWhiteBishop});
-		AddCaptureMove({ From, To, &Captured, &GWhiteKnight});
+		AddCaptureMove({From, To, &Captured, &GWhiteRook});
+		AddCaptureMove({From, To, &Captured, &GWhiteBishop});
+		AddCaptureMove({From, To, &Captured, &GWhiteKnight});
 	}
 	else
 	{
-		AddCaptureMove({ From, To, &Captured, nullptr });
+		AddCaptureMove({From, To, &Captured, nullptr});
 	}
 }
 
-void AChessGameState::AddWhitePawnMove(const FTileCoordinate& From, const FTileCoordinate& To)
+void AChessGameState::AddWhitePawnMove(const FTileCoord& From, const FTileCoord& To)
 {
 	if (From.GetRank() == EBoardRank::Seven)
 	{
-		AddQuietMove({ From, To, nullptr, &GWhiteQueen });
-		AddQuietMove({ From, To, nullptr, &GWhiteRook });
-		AddQuietMove({ From, To, nullptr, &GWhiteBishop});
-		AddQuietMove({ From, To, nullptr, &GWhiteKnight});
+		AddQuietMove({From, To, nullptr, &GWhiteQueen});
+		AddQuietMove({From, To, nullptr, &GWhiteRook});
+		AddQuietMove({From, To, nullptr, &GWhiteBishop});
+		AddQuietMove({From, To, nullptr, &GWhiteKnight});
 	}
 	else
 	{
-		AddQuietMove({ From, To, nullptr, nullptr });
+		AddQuietMove({From, To, nullptr, nullptr});
 	}
 }
 
-void AChessGameState::AddBlackPawnCaptureMove(const FTileCoordinate& From, const FTileCoordinate& To,
-	const FChessPiece& Captured)
+void AChessGameState::AddBlackPawnCaptureMove(const FTileCoord& From, const FTileCoord& To,
+                                              const FChessPiece& Captured)
 {
 	if (From.GetRank() == EBoardRank::Two)
 	{
-		AddCaptureMove({ From, To, &Captured, &GBlackQueen });
-		AddCaptureMove({ From, To, &Captured, &GBlackRook });
-		AddCaptureMove({ From, To, &Captured, &GBlackBishop });
-		AddCaptureMove({ From, To, &Captured, &GBlackKnight });
+		AddCaptureMove({From, To, &Captured, &GBlackQueen});
+		AddCaptureMove({From, To, &Captured, &GBlackRook});
+		AddCaptureMove({From, To, &Captured, &GBlackBishop});
+		AddCaptureMove({From, To, &Captured, &GBlackKnight});
 	}
 	else
 	{
-		AddCaptureMove({ From, To, &Captured, nullptr });
+		AddCaptureMove({From, To, &Captured, nullptr});
 	}
 }
 
-void AChessGameState::AddBlackPawnMove(const FTileCoordinate& From, const FTileCoordinate& To)
+void AChessGameState::AddBlackPawnMove(const FTileCoord& From, const FTileCoord& To)
 {
 	if (From.GetRank() == EBoardRank::Two)
 	{
-		AddQuietMove({ From, To, nullptr, &GBlackQueen });
-		AddQuietMove({ From, To, nullptr, &GBlackRook });
-		AddQuietMove({ From, To, nullptr, &GBlackBishop });
-		AddQuietMove({ From, To, nullptr, &GBlackKnight });
+		AddQuietMove({From, To, nullptr, &GBlackQueen});
+		AddQuietMove({From, To, nullptr, &GBlackRook});
+		AddQuietMove({From, To, nullptr, &GBlackBishop});
+		AddQuietMove({From, To, nullptr, &GBlackKnight});
 	}
 	else
 	{
-		AddQuietMove({ From, To, nullptr, nullptr });
+		AddQuietMove({From, To, nullptr, nullptr});
 	}
 }
 
-//TODO
-//maybe refactor with strategy pattern
-void AChessGameState::GenerateAllMoves()
+void AChessGameState::GenerateAllMoves_Implementation()
 {
 	Moves.Reset();
 
@@ -346,22 +351,31 @@ void AChessGameState::GenerateAllMoves()
 		GenerateSlideMoves();
 		GenerateNonSlideMoves();
 
-		UE_LOG(LogGameState, Display, TEXT("Generated %d moves for side %s"), Moves.Num(), *UEnum::GetValueAsString(Side));
+		UE_LOG(LogGameState, Display, TEXT("Generated %d moves for side %s"), Moves.Num(),
+		       *UEnum::GetValueAsString(Side));
 
+		if (HasAuthority())
+		{
+			UE_LOG(LogGameState, Display, TEXT("Generated moves on server"));
+		}
+		else
+		{
+			UE_LOG(LogGameState, Display, TEXT("Generated moves on client"));
+		}
 	}
 }
 
-void AChessGameState::ClearPiece(const FTileCoordinate& Coord)
+void AChessGameState::ClearPiece(const FTileCoord& Coord)
 {
 	check(Coord.IsValid());
 
 	int32 Idx = Coord.ToInt();
-	
+
 	FChessPiece Piece = Tiles[Idx].GetPiece();
 	check(Piece != GEmptyChessPiece);
 
 	int32 ColorCode = Piece.GetColorCode();
-	
+
 	HashPiece(Piece, Coord);
 
 	Tiles[Idx].SetPiece(GEmptyChessPiece);
@@ -410,7 +424,7 @@ void AChessGameState::ClearPiece(const FTileCoordinate& Coord)
 	PieceList[PieceCode][TempCount] = PieceList[PieceCode][Count];
 }
 
-void AChessGameState::AddPiece(const FTileCoordinate& Coord, const FChessPiece& Piece)
+void AChessGameState::AddPiece(const FTileCoord& Coord, const FChessPiece& Piece)
 {
 	check(Coord.IsValid());
 	check(Piece != GEmptyChessPiece);
@@ -453,7 +467,7 @@ void AChessGameState::AddPiece(const FTileCoordinate& Coord, const FChessPiece& 
 	PieceCount[PieceCode]++;
 }
 
-void AChessGameState::MovePiece(const FTileCoordinate& From, const FTileCoordinate& To)
+void AChessGameState::MovePiece(const FTileCoord& From, const FTileCoord& To)
 {
 	check(From.IsValid());
 	check(To.IsValid());
@@ -466,7 +480,7 @@ void AChessGameState::MovePiece(const FTileCoordinate& From, const FTileCoordina
 	int32 ColorCode = Piece.GetColorCode();
 	int32 PieceCode = Piece.GetCode();
 	int32 Count = PieceCount[PieceCode];
-	
+
 	HashPiece(Piece, From);
 	Tiles[FromIdx].SetPiece(GEmptyChessPiece);
 
@@ -483,7 +497,7 @@ void AChessGameState::MovePiece(const FTileCoordinate& From, const FTileCoordina
 	}
 
 	bool bFound = false;
-	
+
 	for (int32 i = 0; i < Count; ++i)
 	{
 		if (PieceList[PieceCode][i] == From)
@@ -505,18 +519,19 @@ void AChessGameState::TakeMove()
 
 bool AChessGameState::MakeMove(const FChessMove& Move)
 {
-	int32 FromIdx = Move.GetFromTileIndex();
-	int32 ToIdx = Move.GetToTileIndex();
+	const int32 FromIdx = Move.GetFromTileIndex();
+	const int32 ToIdx = Move.GetToTileIndex();
 
-	FChessBoardTile From = Tiles[FromIdx];
-	FChessBoardTile To = Tiles[ToIdx];
-	
-	FChessPiece Piece = Tiles[FromIdx].GetPiece();
+	const FChessBoardTile From = Tiles[FromIdx];
+	const FChessBoardTile To = Tiles[ToIdx];
+
+	const FChessPiece Piece = Tiles[FromIdx].GetPiece();
 	check(Piece != GEmptyChessPiece);
 
 	FChessMoveRecord HistoryRecord{};
 	HistoryRecord.PosHashKey = PosHashKey;
-	
+
+
 	if (Move.IsEnPassantMove())
 	{
 		if (Side == EPieceColor::White)
@@ -527,30 +542,34 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 		{
 			ClearPiece(Tiles[ToIdx + 10].GetPosition());
 		}
+
+		UE_LOG(LogGameState, Display, TEXT("En passant move performed"));
 	}
 	else if (Move.IsCastlingMove())
 	{
-		switch(To.GetPosition().GetEnum())
+		switch (To.GetPosition().GetEnum())
 		{
 		case ETileCoord::C1:
-			MovePiece({ ETileCoord::A1 }, { ETileCoord::B1 });
+			MovePiece({ETileCoord::A1}, {ETileCoord::B1});
 			break;
 
 		case ETileCoord::C8:
-			MovePiece({ ETileCoord::A8 }, { ETileCoord::D8 });
+			MovePiece({ETileCoord::A8}, {ETileCoord::D8});
 			break;
 
 		case ETileCoord::G1:
-			MovePiece({ ETileCoord::H1 }, { ETileCoord::F1 });
+			MovePiece({ETileCoord::H1}, {ETileCoord::F1});
 			break;
 
 		case ETileCoord::G8:
-			MovePiece({ ETileCoord::H8 }, { ETileCoord::H8 });
+			MovePiece({ETileCoord::H8}, {ETileCoord::H8});
 			break;
 
 		default:
 			check(false && "Invalid castling move");
 		}
+
+		UE_LOG(LogGameState, Display, TEXT("Castling move performed"));
 	}
 
 	if (EnPassantTile.IsSet())
@@ -560,19 +579,13 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 
 	HashCastle();
 
-	//TODO with ply
-	HistoryRecord.Move = Move.Raw();
-	HistoryRecord.FiftyMove = FiftyMoveCounter;
-	HistoryRecord.EnPassantTile = EnPassantTile.Get(99);
-	HistoryRecord.CastlePermission = CastlePermission;
-
 	CastlePermission &= From.GetCastlePermission();
 	CastlePermission &= To.GetCastlePermission();
 	EnPassantTile.Reset();
 
 	HashCastle();
 
-	FChessPiece CapturedPiece = FChessPiece::GetPieceFromCode(Move.GetCapturedPiece());
+	const FChessPiece CapturedPiece = FChessPiece::GetPieceFromCode(Move.GetCapturedPiece());
 	++FiftyMoveCounter;
 
 	if (CapturedPiece != GEmptyChessPiece)
@@ -581,8 +594,6 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 		FiftyMoveCounter = 0;
 	}
 
-	//ply
-
 	if (Piece.IsA(EChessPieceRole::Pawn))
 	{
 		FiftyMoveCounter = 0;
@@ -590,11 +601,11 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 		{
 			if (Side == EPieceColor::White)
 			{
-				EnPassantTile = From.GetPosition().ToInt() + 10;
+				EnPassantTile.Emplace(From.GetPosition().ToInt() + 10);
 			}
 			else
 			{
-				EnPassantTile = From.GetPosition().ToInt() - 10;
+				EnPassantTile.Emplace(From.GetPosition().ToInt() - 10);
 			}
 
 			HashEnPassant();
@@ -603,7 +614,7 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 
 	MovePiece(From.GetPosition(), To.GetPosition());
 
-	FChessPiece PromotedPiece = FChessPiece::GetPieceFromCode(Move.GetPromotedPiece());
+	const FChessPiece PromotedPiece = FChessPiece::GetPieceFromCode(Move.GetPromotedPiece());
 	if (PromotedPiece != GEmptyChessPiece)
 	{
 		ClearPiece(To.GetPosition());
@@ -612,19 +623,25 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 
 	if (Piece.IsA(EChessPieceRole::King))
 	{
-		Kings[(int32)Side] = To.GetPosition();
+		Kings[static_cast<int32>(Side)] = To.GetPosition();
 	}
 
-	int32 SideCode = (int32)Side;
-	
-	Side = static_cast<EPieceColor>(SideCode ^ 1);
-	HashSide();
+	int32 SideCode = static_cast<int32>(Side);
+	SetMovingSide(static_cast<EPieceColor>(SideCode ^ 1));
+
 
 	if (IsTileAttacked(Kings[SideCode].GetFile(), Kings[SideCode].GetRank(), Side))
 	{
 		TakeMove();
+
+		UE_LOG(LogGameState, Warning, TEXT("King is attacked, reverting move"));
+
 		return false;
 	}
+
+	UE_LOG(LogGameState, Display, TEXT("Now moving side is %s"), *UEnum::GetValueAsString(Side));
+
+	HashSide();
 
 	return true;
 }
@@ -636,7 +653,7 @@ const TArray<FChessMove>& AChessGameState::GetMoves() const
 
 void AChessGameState::BeginPlay()
 {
-	
+	Super::BeginPlay();
 }
 
 void AChessGameState::GenerateWhitePawnMoves()
@@ -647,7 +664,7 @@ void AChessGameState::GenerateWhitePawnMoves()
 
 	for (int32 i = 0; i < Count; ++i)
 	{
-		FTileCoordinate From = PieceList[PieceCode][i];
+		FTileCoord From = PieceList[PieceCode][i];
 		check(From.IsValid());
 
 		int32 FromIdx = From.ToInt();
@@ -723,7 +740,7 @@ void AChessGameState::GenerateBlackPawnMoves()
 
 	for (int32 i = 0; i < Count; ++i)
 	{
-		FTileCoordinate From = PieceList[PieceCode][i];
+		FTileCoord From = PieceList[PieceCode][i];
 		check(From.IsValid());
 
 		int32 FromIdx = From.ToInt();
@@ -801,7 +818,7 @@ void AChessGameState::GenerateSlideMoves()
 
 		for (int32 i = 0; i < Count; ++i)
 		{
-			FTileCoordinate From = PieceList[PieceCode][i];
+			FTileCoord From = PieceList[PieceCode][i];
 			check(From.IsValid());
 
 			int32 FromIdx = From.ToInt();
@@ -815,19 +832,19 @@ void AChessGameState::GenerateSlideMoves()
 				{
 					if (!TTile.IsEmpty())
 					{
-						if (TTile.GetPiece().GetColorCode() == ((int32)Side ^ 1))
+						if (TTile.GetPiece().GetColorCode() == (static_cast<int32>(Side) ^ 1))
 						{
-							AddCaptureMove({ From, TTile.GetPosition(), &TTile.GetPiece(), nullptr });
+							AddCaptureMove({From, TTile.GetPosition(), &TTile.GetPiece(), nullptr});
 						}
 						break;
 					}
 
-					AddQuietMove({ From, TTile.GetPosition(), nullptr, nullptr });
+					AddQuietMove({From, TTile.GetPosition(), nullptr, nullptr});
 					TTile = Tiles[TTile.GetPosition().ToInt() + Dir];
 				}
 			}
 		}
-	}	
+	}
 }
 
 void AChessGameState::GenerateNonSlideMoves()
@@ -837,14 +854,14 @@ void AChessGameState::GenerateNonSlideMoves()
 	{
 		int32 PieceCode = Piece.GetCode();
 		int32 Count = PieceCount[PieceCode];
-		
+
 		for (int32 i = 0; i < Count; ++i)
 		{
-			FTileCoordinate From = PieceList[PieceCode][i];
+			FTileCoord From = PieceList[PieceCode][i];
 			check(From.IsValid());
 
 			int32 FromIdx = From.ToInt();
-			
+
 			auto&& Dirs = Piece.GetMoveDirections();
 			for (auto&& Dir : Dirs)
 			{
@@ -855,14 +872,14 @@ void AChessGameState::GenerateNonSlideMoves()
 
 				if (!TTile.IsEmpty())
 				{
-					if (TTile.GetPiece().GetColorCode() == ((int32)Side ^ 1))
+					if (TTile.GetPiece().GetColorCode() == (static_cast<int32>(Side) ^ 1))
 					{
-						AddCaptureMove({ From, TTile.GetPosition(), &TTile.GetPiece(), nullptr });
+						AddCaptureMove({From, TTile.GetPosition(), &TTile.GetPiece(), nullptr});
 					}
 					continue;
 				}
 
-				AddQuietMove({ From, TTile.GetPosition(), nullptr, nullptr });
+				AddQuietMove({From, TTile.GetPosition(), nullptr, nullptr});
 			}
 		}
 	}
@@ -870,43 +887,43 @@ void AChessGameState::GenerateNonSlideMoves()
 
 void AChessGameState::GenerateWhiteCastling()
 {
-	if (CastlePermission & (int32)ECastlingType::WhiteKing)
-	{	
+	if (CastlePermission & static_cast<int32>(ECastlingType::WhiteKing))
+	{
 		if (
-			Tiles[FTileCoordinate{ ETileCoord::F1 }.ToInt()].IsEmpty() &&
-			Tiles[FTileCoordinate{ ETileCoord::G1 }.ToInt()].IsEmpty()
-			)
+			Tiles[FTileCoord{ETileCoord::F1}.ToInt()].IsEmpty() &&
+			Tiles[FTileCoord{ETileCoord::G1}.ToInt()].IsEmpty()
+		)
 		{
 			if (
 				!IsTileAttacked(EBoardFile::E, EBoardRank::One, EPieceColor::Black) &&
-				!IsTileAttacked(EBoardFile::F, EBoardRank::One, EPieceColor::Black) 
-				)
+				!IsTileAttacked(EBoardFile::F, EBoardRank::One, EPieceColor::Black)
+			)
 			{
-				FTileCoordinate From{ ETileCoord::E1 };
-				FTileCoordinate To{ ETileCoord::G1 };
-				
-				AddQuietMove({From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove});;
+				FTileCoord From{ETileCoord::E1};
+				FTileCoord To{ETileCoord::G1};
+
+				AddQuietMove({From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove});
 			}
 		}
 	}
 
-	if (CastlePermission & (int32)ECastlingType::WhiteQueen)
+	if (CastlePermission & static_cast<int32>(ECastlingType::WhiteQueen))
 	{
 		if (
-			Tiles[FTileCoordinate{ EBoardFile::D, EBoardRank::One }.ToInt()].IsEmpty() &&
-			Tiles[FTileCoordinate{ EBoardFile::C, EBoardRank::One }.ToInt()].IsEmpty() &&
-			Tiles[FTileCoordinate{ EBoardFile::B, EBoardRank::One }.ToInt()].IsEmpty()
-			)
+			Tiles[FTileCoord{EBoardFile::D, EBoardRank::One}.ToInt()].IsEmpty() &&
+			Tiles[FTileCoord{EBoardFile::C, EBoardRank::One}.ToInt()].IsEmpty() &&
+			Tiles[FTileCoord{EBoardFile::B, EBoardRank::One}.ToInt()].IsEmpty()
+		)
 		{
 			if (
 				!IsTileAttacked(EBoardFile::E, EBoardRank::One, EPieceColor::Black) &&
-				!IsTileAttacked(EBoardFile::D, EBoardRank::One, EPieceColor::Black) 
-				)
+				!IsTileAttacked(EBoardFile::D, EBoardRank::One, EPieceColor::Black)
+			)
 			{
-				FTileCoordinate From{ ETileCoord::E1 };
-				FTileCoordinate To{ ETileCoord::C1 };
+				FTileCoord From{ETileCoord::E1};
+				FTileCoord To{ETileCoord::C1};
 
-				AddQuietMove({ From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove });
+				AddQuietMove({From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove});
 			}
 		}
 	}
@@ -914,49 +931,49 @@ void AChessGameState::GenerateWhiteCastling()
 
 void AChessGameState::GenerateBlackCastling()
 {
-	if (CastlePermission & (int32)ECastlingType::BlackKing)
+	if (CastlePermission & static_cast<int32>(ECastlingType::BlackKing))
 	{
 		if (
-			Tiles[FTileCoordinate{ EBoardFile::F, EBoardRank::Eight }.ToInt()].IsEmpty() &&
-			Tiles[FTileCoordinate{ EBoardFile::G, EBoardRank::Eight }.ToInt()].IsEmpty()
-			)
+			Tiles[FTileCoord{EBoardFile::F, EBoardRank::Eight}.ToInt()].IsEmpty() &&
+			Tiles[FTileCoord{EBoardFile::G, EBoardRank::Eight}.ToInt()].IsEmpty()
+		)
 		{
 			if (
 				!IsTileAttacked(EBoardFile::E, EBoardRank::Eight, EPieceColor::White) &&
 				!IsTileAttacked(EBoardFile::F, EBoardRank::Eight, EPieceColor::White)
-				)
+			)
 			{
-				FTileCoordinate From{ ETileCoord::E8 };
-				FTileCoordinate To{ ETileCoord::G8 };
+				FTileCoord From{ETileCoord::E8};
+				FTileCoord To{ETileCoord::G8};
 
-				AddQuietMove({ From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove });
+				AddQuietMove({From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove});
 			}
 		}
 	}
 
-	if (CastlePermission & (int32)ECastlingType::BlackQueen)
+	if (CastlePermission & static_cast<int32>(ECastlingType::BlackQueen))
 	{
 		if (
-			Tiles[FTileCoordinate{ EBoardFile::D, EBoardRank::Eight }.ToInt()].IsEmpty() &&
-			Tiles[FTileCoordinate{ EBoardFile::C, EBoardRank::Eight }.ToInt()].IsEmpty() &&
-			Tiles[FTileCoordinate{ EBoardFile::B, EBoardRank::Eight }.ToInt()].IsEmpty()
-			)
+			Tiles[FTileCoord{EBoardFile::D, EBoardRank::Eight}.ToInt()].IsEmpty() &&
+			Tiles[FTileCoord{EBoardFile::C, EBoardRank::Eight}.ToInt()].IsEmpty() &&
+			Tiles[FTileCoord{EBoardFile::B, EBoardRank::Eight}.ToInt()].IsEmpty()
+		)
 		{
 			if (
 				!IsTileAttacked(EBoardFile::E, EBoardRank::Eight, EPieceColor::White) &&
 				!IsTileAttacked(EBoardFile::D, EBoardRank::Eight, EPieceColor::White)
-				)
+			)
 			{
-				FTileCoordinate From{ ETileCoord::E8 };
-				FTileCoordinate To{ ETileCoord::C8 };
+				FTileCoord From{ETileCoord::E8};
+				FTileCoord To{ETileCoord::C8};
 
-				AddQuietMove({ From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove });
+				AddQuietMove({From, To, nullptr, nullptr, FChessMove::FLAG_CastlingMove});
 			}
 		}
 	}
 }
 
-void AChessGameState::HashPiece(const FChessPiece& Piece, const FTileCoordinate& Coord)
+void AChessGameState::HashPiece(const FChessPiece& Piece, const FTileCoord& Coord)
 {
 	PosHashKey ^= PieceHashKeys[Piece.GetCode()][Coord.ToInt()];
 }
@@ -1004,7 +1021,7 @@ void AChessGameState::UpdateListsMaterial()
 
 			int32 PieceCode = Piece.GetCode();
 			int32 TileIdx = Tile.GetPosition().ToInt();
-			
+
 			Material[ColorCode] += Piece.GetCost();
 
 			//How it works
@@ -1033,9 +1050,9 @@ void AChessGameState::UpdateListsMaterial()
 	}
 
 	UE_LOG(LogGameState, Display, TEXT("Calculated material:\n%d for whites;\n%d for blacks"),
-			Material[0],
-			Material[1]
-		);
+	       Material[0],
+	       Material[1]
+	);
 }
 
 void AChessGameState::MakeConverterArray_120To64()
@@ -1050,11 +1067,11 @@ void AChessGameState::MakeConverterArray_120To64()
 		Array64To120Converter[i] = 120;
 	}
 
-	const int32 MinRank = FTileCoordinate::GetMinRankIndex();
-	const int32 MaxRank = FTileCoordinate::GetMaxRankIndex();
+	const int32 MinRank = FTileCoord::GetMinRankIndex();
+	const int32 MaxRank = FTileCoord::GetMaxRankIndex();
 
-	const int32 MinFile = FTileCoordinate::GetMinFileIndex();
-	const int32 MaxFile = FTileCoordinate::GetMaxFileIndex();
+	const int32 MinFile = FTileCoord::GetMinFileIndex();
+	const int32 MaxFile = FTileCoord::GetMaxFileIndex();
 
 	int32 TileAt64Array = 0;
 
@@ -1062,8 +1079,8 @@ void AChessGameState::MakeConverterArray_120To64()
 	{
 		for (int32 j = MinFile; j <= MaxFile; ++j)
 		{
-			const EBoardRank CurrentRank = FTileCoordinate::ToRank(i);
-			const EBoardFile CurrentFile = FTileCoordinate::ToFile(j);
+			const EBoardRank CurrentRank = FTileCoord::ToRank(i);
+			const EBoardFile CurrentFile = FTileCoord::ToFile(j);
 
 			int32 Tile = UChessGameStatics::GetTileIndexAt(CurrentFile, CurrentRank);
 
@@ -1083,34 +1100,6 @@ int32 AChessGameState::GetTileAs64(int32 Tile120)
 int32 AChessGameState::GetTileAs120(int32 Tile64)
 {
 	return Array64To120Converter[Tile64];
-}
-
-void AChessGameState::MakeFilesRanksArrays()
-{
-	for (int32 i = 0; i < 120; ++i)
-	{
-		BoardFiles[i] = EBoardFile::None;
-		BoardRanks[i] = EBoardRank::None;
-	}
-
-	const int32 MinRank = FTileCoordinate::GetMinRankIndex();
-	const int32 MaxRank = FTileCoordinate::GetMaxRankIndex();
-
-	const int32 MinFile = FTileCoordinate::GetMinFileIndex();
-	const int32 MaxFile = FTileCoordinate::GetMaxFileIndex();
-
-	for (int32 i = MinRank; i <= MaxRank; ++i)
-	{
-		for (int32 j = MinFile; j <= MaxFile; ++j)
-		{
-			const EBoardRank CurrentRank = FTileCoordinate::ToRank(i);
-			const EBoardFile CurrentFile = FTileCoordinate::ToFile(j);
-
-			const int32 Tile = UChessGameStatics::GetTileIndexAt(CurrentFile, CurrentRank);
-			BoardFiles[Tile] = CurrentFile;
-			BoardRanks[Tile] = CurrentRank;
-		}
-	}
 }
 
 void AChessGameState::MakeBitMasks()
@@ -1145,7 +1134,7 @@ void AChessGameState::MakeHashKeys()
 int32 AChessGameState::PopBit()
 {
 	uint64 TempBitboard = Bitboard ^ (Bitboard - 1);
-	uint32 Fold = (uint32)((TempBitboard & 0xffffffff) ^ (TempBitboard >> 32));
+	uint32 Fold = static_cast<uint32>((TempBitboard & 0xffffffff) ^ (TempBitboard >> 32));
 	Bitboard &= (Bitboard - 1);
 
 	return BitTable[(Fold * 0x783a9b23) >> 26];
@@ -1155,7 +1144,7 @@ int32 AChessGameState::CountBits() const
 {
 	uint64 TempBitboard = Bitboard;
 	int32 Count;
-	
+
 	for (Count = 0; TempBitboard; ++Count, TempBitboard &= TempBitboard - 1);
 	return Count;
 }
@@ -1232,7 +1221,7 @@ void AChessGameState::ResetBoard()
 		PieceCount[i] = 0;
 	}
 
-	Kings[0] = FTileCoordinate{};
+	Kings[0] = FTileCoord{};
 	Kings[1] = Kings[0];
 
 	Side = EPieceColor::Both;
@@ -1240,9 +1229,6 @@ void AChessGameState::ResetBoard()
 	EnPassantTile.Reset();
 
 	FiftyMoveCounter = 0;
-	Ply = 0;
-	HisPly = 0;
-
 	CastlePermission = 0;
 	PosHashKey = 0;
 

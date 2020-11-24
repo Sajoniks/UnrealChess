@@ -2,7 +2,7 @@
 
 #include "ChessMove.h"
 
-FChessMove::FChessMove(const FTileCoordinate& From, const FTileCoordinate& To, const FChessPiece* Captured,
+FChessMove::FChessMove(const FTileCoord& From, const FTileCoord& To, const FChessPiece* Captured,
                        const FChessPiece* Promoted, int32 Flags)
 {
 	int32 PromotedCode = (Promoted) ? Promoted->GetCode() : 0;

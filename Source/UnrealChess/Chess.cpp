@@ -71,7 +71,7 @@ EChessPieceRole AChess::GetPieceRole() const
 	return ChessRole;
 }
 
-void AChess::InitPiece(const FChessPiece& Piece, const FTileCoordinate& Coord, AChessboard* Board)
+void AChess::InitPiece(const FChessPiece& Piece, const FTileCoord& Coord, AChessboard* Board)
 {
 	this->Location = Coord;
 	
@@ -132,12 +132,12 @@ void AChess::InitPiece(const FChessPiece& Piece, const FTileCoordinate& Coord, A
 	UpdateMesh();
 }
 
-const FTileCoordinate& AChess::GetBoardLocation() const
+const FTileCoord& AChess::GetBoardLocation() const
 {
 	return Location;
 }
 
-void AChess::SetBoardLocation(const FTileCoordinate& NewLocation)
+void AChess::SetBoardLocation(const FTileCoord& NewLocation)
 {
 	this->Location = NewLocation;
 }

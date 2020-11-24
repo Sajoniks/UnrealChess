@@ -28,7 +28,7 @@ class UNREALCHESS_API ATile : public AActor
 	UPROPERTY(VisibleDefaultsOnly, Instanced, Category="Appearence")
 	UStaticMeshComponent* TileMesh;
 
-	FTileCoordinate Coord;
+	FTileCoord Coord;
 
 	UPROPERTY()
 	UDataTable* TileMaterials;
@@ -43,12 +43,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Set")
 	void SetType(ETileType Type);
 	
-	void SetLocation(const FTileCoordinate& Coordinate);
+	void SetLocation(const FTileCoord& Coordinate);
 
 	UFUNCTION(BlueprintCallable, Category = "Set")
 	void SetPiece(AChess* NewPiece);
 	
-	const FTileCoordinate& GetLocation() const;
+	const FTileCoord& GetLocation() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Get")
 	AChess* GetPiece() const;
