@@ -105,12 +105,6 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 				ATile* FromTile = Tiles[FromIdx];
 				ATile* ToTile = Tiles[ToIdx];
 
-				if (HasAuthority())
-				{
-					UE_LOG(LogGameState, Display, TEXT("Move performed on server"));
-				}
-				else
-				{
 					UE_LOG(LogGameState, Display, TEXT("Move performed on client"));
 
 					//Update visuals
@@ -191,7 +185,6 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 					{
 						OnMove(FromTile, ToTile, nullptr, Move);
 					}
-				}
 
 				ToTile->SetPiece(FromTile->GetPiece());
 				FromTile->SetPiece(nullptr);

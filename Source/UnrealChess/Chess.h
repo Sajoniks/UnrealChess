@@ -81,17 +81,18 @@ public:
 	const FTileCoord& GetBoardLocation() const;
 	void SetBoardLocation(const FTileCoord& NewLocation);
 
-protected:
-	// Called when the game starts or when spawned
-	void BeginPlay() override;
-
+	
 	//Base piece
-	UPROPERTY(VisibleDefaultsOnly, Instanced, Category="Mesh")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Instanced, Category="Mesh")
 	UStaticMeshComponent* PieceBase;
 
 	//Top piece
-	UPROPERTY(VisibleDefaultsOnly, Instanced, Category = "Mesh")
+	UPROPERTY(VisibleDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Mesh")
 	UStaticMeshComponent* PieceTop;
+	
+protected:
+	// Called when the game starts or when spawned
+	void BeginPlay() override;
 
 	//Chessboard that owns this piece
 	UPROPERTY()
