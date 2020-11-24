@@ -118,28 +118,28 @@ public:
 	/**Piece code
 	 * @return Integer in range [1-12] (1-white pawn, 2-white knight, ...), or 0, if invalid
 	 */
-	FORCEINLINE int32 GetCode() const;
+	int32 GetCode() const;
 
 	//Chess piece value
-	FORCEINLINE int32 GetCost() const;
+	int32 GetCost() const;
 
 	//Chess state as enum
-	FORCEINLINE ETileState GetEnum() const;
+	ETileState GetEnum() const;
 
 	//Chess piece color enum
-	FORCEINLINE EPieceColor GetColor() const;
+	EPieceColor GetColor() const;
 
 	/**Color code of the piece
 	 * @return Integer in range [0-1], if chess is valid, else [2-3] if invalid
 	 */
-	FORCEINLINE int32 GetColorCode() const;
+	int32 GetColorCode() const;
 
-	FORCEINLINE bool IsBigPiece() const;
-	FORCEINLINE bool IsMajorPiece() const;
-	FORCEINLINE bool IsMinorPiece() const;
-	FORCEINLINE bool IsA(EChessPieceRole Role) const;
+	bool IsBigPiece() const;
+	bool IsMajorPiece() const;
+	bool IsMinorPiece() const;
+	bool IsA(EChessPieceRole Role) const;
 	
-	FORCEINLINE const TArray<int32>& GetMoveDirections() const;
+	const TArray<int32>& GetMoveDirections() const;
 	
 	static const TArray<FChessPiece>& GetSlidingPiecesByColor(EPieceColor Color);
 	static const TArray<FChessPiece>& GetNonSlidingPiecesByColor(EPieceColor Color);

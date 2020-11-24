@@ -3,8 +3,6 @@
 
 #include "Chess.h"
 #include "UObject/ConstructorHelpers.h"
-#include "ChessDefinitions.h"
-
 #include "UnrealChess.h"
 
 // Sets default values

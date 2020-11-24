@@ -11,7 +11,7 @@ class AChessboard;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class UNREALCHESS_API AChessPlayerController : public APlayerController
 {
 	GENERATED_BODY()

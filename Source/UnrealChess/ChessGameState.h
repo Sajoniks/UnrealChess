@@ -15,7 +15,7 @@
 class AChessboard;
 class UDataTable;
 
-UCLASS(CustomConstructor)
+UCLASS(CustomConstructor, Blueprintable)
 class UNREALCHESS_API AChessGameState : public AGameStateBase
 {
 	GENERATED_BODY()

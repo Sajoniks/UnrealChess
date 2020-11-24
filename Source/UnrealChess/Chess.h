@@ -37,7 +37,7 @@ struct FChessMaterialPath : public FTableRowBase
 	UMaterialInstance* Material;
 };
 
-UCLASS()
+UCLASS(Blueprintable)
 class UNREALCHESS_API AChess : public AActor
 {
 	GENERATED_BODY()

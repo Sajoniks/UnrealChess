@@ -20,7 +20,7 @@ enum class ETileType : uint8
 class AChessboard;
 class AChess;
 
-UCLASS()
+UCLASS(Blueprintable)
 class UNREALCHESS_API ATile : public AActor
 {
 	GENERATED_BODY()

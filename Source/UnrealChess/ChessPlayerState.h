@@ -9,7 +9,7 @@
 /**
  * TODO
  */
-UCLASS()
+UCLASS(Blueprintable)
 class UNREALCHESS_API AChessPlayerState : public APlayerState
 {
 	GENERATED_BODY()
