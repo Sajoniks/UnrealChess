@@ -22,5 +22,5 @@ bool AChessPlayerController::Server_NotifyPlayerMoved_Validate(AChessboard* Boar
 
 void AChessPlayerController::Server_NotifyPlayerMoved_Implementation(AChessboard* Board, int32 FromIdx, int32 ToIdx)
 {
-	Board->Multicast_Move(FromIdx, ToIdx);
+	Board->Multicast_Move(FromIdx, ToIdx, this);
 }

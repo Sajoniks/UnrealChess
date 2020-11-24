@@ -16,3 +16,23 @@ FChessMove::FChessMove(const FTileCoord& From, const FTileCoord& To, const FChes
 		(Flags)
 	);
 }
+
+int32 FChessMove::GetFromTileIndex() const
+{
+	return Move & 0x7F;
+}
+
+FTileCoord FChessMove::GetFrom() const
+{
+	return {(ETileCoord)GetFromTileIndex()};
+}
+
+int32 FChessMove::GetToTileIndex() const
+{
+	return (Move >> 7) & 0x7F;
+}
+
+FTileCoord FChessMove::GetTo() const
+{
+	return {(ETileCoord)GetToTileIndex()};
+}

@@ -57,6 +57,12 @@ public:
 	EChessPieceRole ChessRole;
 	EChessPieceColor ChessColor;
 
+	/*
+	 * For cosmetic purposes only, can break the game
+	 */
+	UFUNCTION(BlueprintCallable, Category="Cosmetic")
+	void Randomize();
+
 	void OnConstruction(const FTransform& Transform) override;
 
 	//IS white?

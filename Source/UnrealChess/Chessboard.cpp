@@ -91,7 +91,7 @@ AChess* AChessboard::GetSelection() const
 	return SelectedChess;
 }
 
-void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
+void AChessboard::Multicast_Move_Implementation(int32 From, int32 To, AChessPlayerController* Controller)
 {	
 	for (auto&& Move : GetChessGameState()->GetMoves())
 	{
@@ -105,58 +105,52 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 				ATile* FromTile = Tiles[FromIdx];
 				ATile* ToTile = Tiles[ToIdx];
 
-					UE_LOG(LogGameState, Display, TEXT("Move performed on client"));
+				ATile* NewPiece = nullptr;
+				ATile* Piece = nullptr;
+				
+				UE_LOG(LogGameState, Display, TEXT("Move performed on %s"), *GetName());
 
 					//Update visuals
 					if (UChessGameStatics::IsCastlingMove(Move))
 					{
-						if (To == FTileCoord{ETileCoord::G1}.ToInt())
+						if (To == FTileCoord{ ETileCoord::G1 }.ToInt())
 						{
 							//White king castling
-		
-							ATile* NewPiece = Tiles[ToIdx - 1];
-							ATile* Piece = Tiles[ToIdx + 1];
+
+							NewPiece = Tiles[ToIdx - 1];
+							Piece = Tiles[ToIdx + 1];
 
 							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
-
-							NewPiece->SetPiece(Piece->GetPiece());
-							Piece->SetPiece(nullptr);
 						}
-						else if (To == FTileCoord{ETileCoord::C1}.ToInt())
+						else if (To == FTileCoord{ ETileCoord::C1 }.ToInt())
 						{
 							//White queen castling
 
-							ATile* NewPiece = Tiles[ToIdx + 1];
-							ATile* Piece = Tiles[ToIdx - 2];
+							NewPiece = Tiles[ToIdx + 1];
+							Piece = Tiles[ToIdx - 2];
 
 							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
-
-							NewPiece->SetPiece(Piece->GetPiece());
-							Piece->SetPiece(nullptr);
 						}
-						else if (To == FTileCoord{ETileCoord::G8}.ToInt())
+						else if (To == FTileCoord{ ETileCoord::G8 }.ToInt())
 						{
 							//Black king castling
 
-							ATile* NewPiece = Tiles[ToIdx - 1];
-							ATile* Piece = Tiles[ToIdx + 1];
+							NewPiece = Tiles[ToIdx - 1];
+							Piece = Tiles[ToIdx + 1];
 
 							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
 
 							NewPiece->SetPiece(Piece->GetPiece());
 							Piece->SetPiece(nullptr);
 						}
-						else if (To == FTileCoord{ETileCoord::C8}.ToInt())
+						else if (To == FTileCoord{ ETileCoord::C8 }.ToInt())
 						{
 							//Black queen castling
 
-							ATile* NewPiece = Tiles[ToIdx + 1];
-							ATile* Piece = Tiles[ToIdx - 2];
+							NewPiece = Tiles[ToIdx + 1];
+							Piece = Tiles[ToIdx - 2];
 
 							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
-
-							NewPiece->SetPiece(Piece->GetPiece());
-							Piece->SetPiece(nullptr);
 						}
 						else
 						{
@@ -166,7 +160,7 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 					else if (UChessGameStatics::IsEnPassantMove(Move))
 					{
 						int32 EnPas;
-						
+
 						if (GetChessGameState()->GetSide() == EPieceColor::White)
 						{
 							EnPas = To + 10;
@@ -175,10 +169,10 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 						{
 							EnPas = To - 10;
 						}
-						
+
 						EnPas = GetChessGameState()->GetTileAs64(EnPas);
 						ATile* EnPasTile = Tiles[EnPas];
-						
+
 						OnMove(FromTile, ToTile, EnPasTile, Move);
 					}
 					else
@@ -188,8 +182,16 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 
 				ToTile->SetPiece(FromTile->GetPiece());
 				FromTile->SetPiece(nullptr);
-				
+
+				if (Piece && NewPiece)
+				{
+					NewPiece->SetPiece(Piece->GetPiece());
+					Piece->SetPiece(nullptr);
+				}
+
+				OnPlayerMove.Broadcast();
 				GetChessGameState()->GenerateAllMoves();
+				
 				break;
 			}
 		}

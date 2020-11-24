@@ -15,6 +15,13 @@
 class AChessboard;
 class UDataTable;
 
+UENUM(BlueprintType)
+enum class EEndChessGameReason : uint8
+{
+	Mate,
+	Stalemate
+};
+
 UCLASS(CustomConstructor, Blueprintable)
 class UNREALCHESS_API AChessGameState : public AGameStateBase
 {
@@ -25,6 +32,7 @@ public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoveFailed, EPieceColor, Side);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKingCheck, EPieceColor, Side);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCheckMate, EPieceColor, Side);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStaleMate);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnMoveFailed MoveFailed;
@@ -34,6 +42,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnCheckMate KingCheckMate;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnStaleMate StaleMate;
 	
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
 
@@ -98,7 +109,7 @@ public:
 	int32 GetTileAs120(int32 Tile64);
 
 	//
-	void EndGame();
+	void EndGame(EEndChessGameReason Reason);
 
 	//
 	UFUNCTION(BlueprintCallable, Category="Get")
@@ -116,6 +127,9 @@ private:
 
 	//Is king under checkmate on moving side
 	bool IsCheckMate();
+
+	//No moves?
+	bool IsStalemate() const;
 
 	//All tiles
 	TStaticArray<FChessBoardTile, 120> Tiles{ };

@@ -33,6 +33,11 @@ class UNREALCHESS_API AChessboard : public AActor
 	UArrowComponent* Arrow;
 	
 public:
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FChessboardMove);
+
+	UPROPERTY(BlueprintAssignable)
+	FChessboardMove OnPlayerMove;
 	
 	//Sets default values for this actor's properties
 	AChessboard();
@@ -70,7 +75,7 @@ public:
 	//Perform move
 	//Called from controller
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Move(int32 From, int32 To);
+	void Multicast_Move(int32 From, int32 To, AChessPlayerController* Controller);
 	
 protected:
 	

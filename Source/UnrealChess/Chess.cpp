@@ -49,6 +49,14 @@ AChess::AChess()
 	ChessRole = EChessPieceRole::Pawn;
 }
 
+void AChess::Randomize()
+{
+	ChessColor = static_cast<EChessPieceColor>(FMath::RandRange(0, 1));
+	ChessRole = static_cast<EChessPieceRole>(FMath::RandRange(0, 5));
+
+	UpdateMesh();
+}
+
 void AChess::OnConstruction(const FTransform& Transform)
 {
 	UpdateMesh();

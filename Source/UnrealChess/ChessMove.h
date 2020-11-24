@@ -34,11 +34,11 @@ public:
 		int32 Flags = 0
 	);
 
-	int32 GetFromTileIndex()		const { return Move & 0x7F; }
-	FTileCoord GetFrom()	const { return { (ETileCoord)GetFromTileIndex() }; }
+	int32 GetFromTileIndex() const;
+	FTileCoord GetFrom() const;
 
-	int32 GetToTileIndex()		const { return (Move >> 7) & 0x7F; }
-	FTileCoord GetTo()		const { return { (ETileCoord)GetToTileIndex() }; }
+	int32 GetToTileIndex() const;
+	FTileCoord GetTo() const;
 
 	int32 GetCapturedPiece()		const { return (Move >> 14) & 0xF; }
 	int32 GetPromotedPiece()		const { return (Move >> 20) & 0xF; }

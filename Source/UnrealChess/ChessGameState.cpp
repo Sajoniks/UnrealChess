@@ -354,15 +354,6 @@ void AChessGameState::GenerateAllMoves_Implementation()
 		UE_LOG(LogGameState, Display, TEXT("Generated %d moves for side %s"), Moves.Num(),
 		       *UEnum::GetValueAsString(Side));
 
-		if (HasAuthority())
-		{
-			UE_LOG(LogGameState, Display, TEXT("Generated moves on server"));
-		}
-		else
-		{
-			UE_LOG(LogGameState, Display, TEXT("Generated moves on client"));
-		}
-
 		CheckKingState();
 	}
 }
@@ -609,10 +600,15 @@ void AChessGameState::TakeMove()
 
 void AChessGameState::CheckKingState()
 {
-	if (IsCheckMate())
+	if (IsStalemate())
+	{
+		UE_LOG(LogGameState, Warning, TEXT("Stalemate!"));
+		EndGame(EEndChessGameReason::Stalemate);
+	}
+	else if (IsCheckMate())
 	{
 		UE_LOG(LogGameState, Warning, TEXT("Checkmate!"));
-		EndGame();
+		EndGame(EEndChessGameReason::Mate);
 	}
 	else if (IsCheck())
 	{
@@ -796,48 +792,48 @@ void AChessGameState::GenerateWhitePawnMoves()
 					}
 				);
 			}
+		}
 
-			//Check for capture moves
-			FChessBoardTile Tile = Tiles[FromIdx + 9];
-			if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::Black)
+		//Check for capture moves
+		FChessBoardTile Tile = Tiles[FromIdx + 9];
+		if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::Black)
+		{
+			AddWhitePawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
+		}
+
+		Tile = Tiles[FromIdx + 11];
+		if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::Black)
+		{
+			AddWhitePawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
+		}
+
+		//Check for en passant moves
+		if (EnPassantTile.IsSet())
+		{
+			if (FromIdx + 9 == EnPassantTile.GetValue())
 			{
-				AddWhitePawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
+				AddCaptureMove(
+					{
+						From,
+						Tiles[FromIdx + 9].GetPosition(),
+						nullptr,
+						nullptr,
+						FChessMove::FLAG_EnPassantMove
+					}
+				);
 			}
 
-			Tile = Tiles[FromIdx + 11];
-			if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::Black)
+			if (FromIdx + 11 == EnPassantTile.GetValue())
 			{
-				AddWhitePawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
-			}
-
-			//Check for en passant moves
-			if (EnPassantTile.IsSet())
-			{
-				if (FromIdx + 9 == EnPassantTile.GetValue())
-				{
-					AddCaptureMove(
-						{
-							From,
-							Tiles[FromIdx + 9].GetPosition(),
-							nullptr,
-							nullptr,
-							FChessMove::FLAG_EnPassantMove
-						}
-					);
-				}
-
-				if (FromIdx + 11 == EnPassantTile.GetValue())
-				{
-					AddCaptureMove(
-						{
-							From,
-							Tiles[FromIdx + 11].GetPosition(),
-							nullptr,
-							nullptr,
-							FChessMove::FLAG_EnPassantMove
-						}
-					);
-				}
+				AddCaptureMove(
+					{
+						From,
+						Tiles[FromIdx + 11].GetPosition(),
+						nullptr,
+						nullptr,
+						FChessMove::FLAG_EnPassantMove
+					}
+				);
 			}
 		}
 	}
@@ -872,48 +868,47 @@ void AChessGameState::GenerateBlackPawnMoves()
 					}
 				);
 			}
+		}
+		//Check for capture moves
+		FChessBoardTile Tile = Tiles[FromIdx - 9];
+		if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::White)
+		{
+			AddBlackPawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
+		}
 
-			//Check for capture moves
-			FChessBoardTile Tile = Tiles[FromIdx - 9];
-			if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::White)
+		Tile = Tiles[FromIdx - 11];
+		if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::White)
+		{
+			AddBlackPawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
+		}
+
+		//Check for en passant moves
+		if (EnPassantTile.IsSet())
+		{
+			if (FromIdx - 9 == EnPassantTile.GetValue())
 			{
-				AddBlackPawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
+				AddCaptureMove(
+					{
+						From,
+						Tiles[FromIdx - 9].GetPosition(),
+						nullptr,
+						nullptr,
+						FChessMove::FLAG_EnPassantMove
+					}
+				);
 			}
 
-			Tile = Tiles[FromIdx - 11];
-			if (!Tile.IsEmpty() && Tile.GetPiece().GetColor() == EPieceColor::White)
+			if (FromIdx - 11 == EnPassantTile.GetValue())
 			{
-				AddBlackPawnCaptureMove(From, Tile.GetPosition(), Tile.GetPiece());
-			}
-
-			//Check for en passant moves
-			if (EnPassantTile.IsSet())
-			{
-				if (FromIdx - 9 == EnPassantTile.GetValue())
-				{
-					AddCaptureMove(
-						{
-							From,
-							Tiles[FromIdx - 9].GetPosition(),
-							nullptr,
-							nullptr,
-							FChessMove::FLAG_EnPassantMove
-						}
-					);
-				}
-
-				if (FromIdx - 11 == EnPassantTile.GetValue())
-				{
-					AddCaptureMove(
-						{
-							From,
-							Tiles[FromIdx - 11].GetPosition(),
-							nullptr,
-							nullptr,
-							FChessMove::FLAG_EnPassantMove
-						}
-					);
-				}
+				AddCaptureMove(
+					{
+						From,
+						Tiles[FromIdx - 11].GetPosition(),
+						nullptr,
+						nullptr,
+						FChessMove::FLAG_EnPassantMove
+					}
+				);
 			}
 		}
 	}
@@ -1213,10 +1208,20 @@ int32 AChessGameState::GetTileAs120(int32 Tile64)
 	return Array64To120Converter[Tile64];
 }
 
-void AChessGameState::EndGame()
+void AChessGameState::EndGame(EEndChessGameReason Reason)
 {
 	bEnded = true;
-	KingCheckMate.Broadcast(Side);
+	
+	switch(Reason)
+	{
+	case EEndChessGameReason::Mate:
+		KingCheckMate.Broadcast(Side);
+		return;
+
+	case EEndChessGameReason::Stalemate:
+		StaleMate.Broadcast();
+		return;
+	}
 }
 
 bool AChessGameState::IsFinished() const
@@ -1236,36 +1241,36 @@ bool AChessGameState::IsCheck()
 
 bool AChessGameState::IsCheckMate()
 {
-	if (IsCheck())
+	//Very straightforward
+	
+	if (!IsCheck())
+		return false;
+
+	for (auto&& Move : Moves)
 	{
-		int32 SideCode = (int32)Side;
-		EPieceColor TheirSide = static_cast<EPieceColor>(SideCode ^ 1);
-		
-		FTileCoord KingTile = Kings[SideCode];
 
-		bool bCheckMate = true;
-		bool bAnyMove = false;
-		
-		for (auto&& Move : Moves)
+		//Make move
+		if (MakeMove(Move))
 		{
-			if (Move.GetFrom() == KingTile)
+			//Is check away?
+			if (!IsCheck())
 			{
-				bAnyMove = true;
-				
-				FTileCoord ToTile = Move.GetTo();
-				if (!IsTileAttacked(ToTile.GetFile(), ToTile.GetRank(), TheirSide))
-				{
-					bCheckMate = false;
-					break;
-				}
-			}
-		}
+				//Move away
+				TakeMove();
 
-		return bAnyMove && bCheckMate;
+				//No checkmate!
+				return false;
+			}
+
+			TakeMove();
+		}
 	}
 
-	return false;
+	//All moves lead to checkmate...
+	return true;
 }
+
+
 
 void AChessGameState::MakeBitMasks()
 {
@@ -1398,4 +1403,9 @@ void AChessGameState::ResetBoard()
 	PosHashKey = 0;
 
 	History.Reset();
+}
+
+bool AChessGameState::IsStalemate() const
+{
+	return Moves.Num() == 0;
 }
