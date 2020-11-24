@@ -10,7 +10,7 @@
 #include "Components/ArrowComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
-
+#include "UnrealChess.h"
 
 
 // Sets default values
@@ -22,6 +22,7 @@ AChessboard::AChessboard()
 	TileSize = 25;
 
 	BoardMesh = CreateDefaultSubobject<UStaticMeshComponent>("Board");
+	BoardMesh->SetCollisionObjectType(ECC_BOARD);
 	SetRootComponent(BoardMesh);
 	
 	Arrow = CreateDefaultSubobject<UArrowComponent>("Arrow");
@@ -85,6 +86,11 @@ void AChessboard::AddSelection(AChess* Chess)
 	}
 }
 
+AChess* AChessboard::GetSelection() const
+{
+	return SelectedChess;
+}
+
 void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 {	
 	for (auto&& Move : GetChessGameState()->GetMoves())
@@ -110,7 +116,58 @@ void AChessboard::Multicast_Move_Implementation(int32 From, int32 To)
 					//Update visuals
 					if (UChessGameStatics::IsCastlingMove(Move))
 					{
-						//TODO	
+						if (To == FTileCoord{ETileCoord::G1}.ToInt())
+						{
+							//White king castling
+		
+							ATile* NewPiece = Tiles[ToIdx - 1];
+							ATile* Piece = Tiles[ToIdx + 1];
+
+							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
+
+							NewPiece->SetPiece(Piece->GetPiece());
+							Piece->SetPiece(nullptr);
+						}
+						else if (To == FTileCoord{ETileCoord::C1}.ToInt())
+						{
+							//White queen castling
+
+							ATile* NewPiece = Tiles[ToIdx + 1];
+							ATile* Piece = Tiles[ToIdx - 2];
+
+							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
+
+							NewPiece->SetPiece(Piece->GetPiece());
+							Piece->SetPiece(nullptr);
+						}
+						else if (To == FTileCoord{ETileCoord::G8}.ToInt())
+						{
+							//Black king castling
+
+							ATile* NewPiece = Tiles[ToIdx - 1];
+							ATile* Piece = Tiles[ToIdx + 1];
+
+							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
+
+							NewPiece->SetPiece(Piece->GetPiece());
+							Piece->SetPiece(nullptr);
+						}
+						else if (To == FTileCoord{ETileCoord::C8}.ToInt())
+						{
+							//Black queen castling
+
+							ATile* NewPiece = Tiles[ToIdx + 1];
+							ATile* Piece = Tiles[ToIdx - 2];
+
+							OnCastlingMove(FromTile, ToTile, Piece, NewPiece);
+
+							NewPiece->SetPiece(Piece->GetPiece());
+							Piece->SetPiece(nullptr);
+						}
+						else
+						{
+							check(false)
+						}
 					}
 					else if (UChessGameStatics::IsEnPassantMove(Move))
 					{
@@ -251,6 +308,6 @@ void AChessboard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	DrawDebug();
+	//DrawDebug();
 }
 

@@ -31,6 +31,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Get")
 	static bool IsCaptureMove(const FChessMove& Move);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Get")
+	static bool IsPromotionMove(const FChessMove& Move);
+	
 	UFUNCTION(BlueprintCallable, Category="Utility")
 	/**Get 120-tile array index from given rank and file
 	 * @param Rank Board rank

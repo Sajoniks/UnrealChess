@@ -39,6 +39,10 @@ public:
 
 	FTileCoord(EBoardFile File, EBoardRank Rank);
 
+	FTileCoord(int32 File, int32 Rank);
+
+	explicit FTileCoord(int32 Idx120);
+
 	FORCEINLINE ETileCoord GetEnum() const;
 	FORCEINLINE EBoardFile GetFile() const;
 	FORCEINLINE EBoardRank GetRank() const;

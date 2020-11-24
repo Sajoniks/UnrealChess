@@ -56,6 +56,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Set")
 	void AddSelection(AChess* Chess);
 
+	UFUNCTION(BlueprintCallable, Category = "Get")
+	AChess* GetSelection() const;
+
 	//Event called on tile click
 	UFUNCTION(BlueprintCallable, Category="Action")
 	void OnTileClicked(ATile* Tile, AChessPlayerController* Controller);
@@ -77,7 +80,7 @@ protected:
 
 	//Called on castling move
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
-	void OnCastlingMove(ATile* King, ATile* Piece, ATile* KKing, ATile* PPiece);
+	void OnCastlingMove(ATile* King, ATile* NewKing, ATile* Piece, ATile* NewPiece);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearence", meta=(ClampMin="10"))
 	//Size of the side of the tile in uu

@@ -4,3 +4,6 @@
 
 #include "CoreMinimal.h"
 
+#define ECC_TILE ECC_GameTraceChannel1
+#define ECC_CHESS ECC_GameTraceChannel2
+#define ECC_BOARD ECC_GameTraceChannel3

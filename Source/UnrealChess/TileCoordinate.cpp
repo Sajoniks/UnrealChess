@@ -69,6 +69,23 @@ FTileCoord::FTileCoord(EBoardFile File, EBoardRank Rank):
 	Coordinate = static_cast<ETileCoord>(21 + (int32)Rank * 10 + (int32)File);
 }
 
+FTileCoord::FTileCoord(int32 File, int32 Rank):
+	FTileCoord(
+		static_cast<EBoardFile>(File),
+		static_cast<EBoardRank>(Rank)
+	)
+{
+	
+}
+
+FTileCoord::FTileCoord(int32 Idx120):
+	FTileCoord(
+		static_cast<ETileCoord>(Idx120)
+	)
+{
+	
+}
+
 EBoardRank FTileCoord::ToRank(int32 Int)
 {
 	return static_cast<EBoardRank>(Int);

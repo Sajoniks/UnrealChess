@@ -22,6 +22,19 @@ class UNREALCHESS_API AChessGameState : public AGameStateBase
 	
 public:
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoveFailed, EPieceColor, Side);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKingCheck, EPieceColor, Side);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCheckMate, EPieceColor, Side);
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnMoveFailed MoveFailed;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnKingCheck KingCheck;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnCheckMate KingCheckMate;
+	
 	AChessGameState(const FObjectInitializer& ObjectInitializer);
 
 	//Set moving side
@@ -58,6 +71,7 @@ public:
 	
 	//Move related functions
 	void ClearPiece(const FTileCoord& Coord);
+	
 	void AddPiece(const FTileCoord& Coord, const FChessPiece& Piece);
 	void MovePiece(const FTileCoord& From, const FTileCoord& To);
 
@@ -70,6 +84,7 @@ public:
 
 	//Restart
 	void ResetBoard();
+	void CheckKingState();
 
 	//Get current moves for moving side
 	const TArray<FChessMove>& GetMoves() const;
@@ -82,10 +97,25 @@ public:
 	int32 GetTileAs64(int32 Tile120);
 	int32 GetTileAs120(int32 Tile64);
 
+	//
+	void EndGame();
+
+	//
+	UFUNCTION(BlueprintCallable, Category="Get")
+	bool IsFinished() const;
+
 	//Tile where en passant move is active
 	TOptional<int32> EnPassantTile = 0;
 	
 private:
+
+	bool bEnded = false;
+	
+	//Is king under check on moving side
+	bool IsCheck();
+
+	//Is king under checkmate on moving side
+	bool IsCheckMate();
 
 	//All tiles
 	TStaticArray<FChessBoardTile, 120> Tiles{ };

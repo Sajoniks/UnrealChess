@@ -5,6 +5,8 @@
 #include "UObject/ConstructorHelpers.h"
 #include "ChessDefinitions.h"
 
+#include "UnrealChess.h"
+
 // Sets default values
 AChess::AChess()
 {
@@ -13,6 +15,9 @@ AChess::AChess()
 
 	PieceBase = CreateDefaultSubobject<UStaticMeshComponent>("Base");
 	PieceTop = CreateDefaultSubobject<UStaticMeshComponent>("Top piece");
+
+	PieceBase->SetCollisionObjectType(ECC_CHESS);
+	PieceTop->SetCollisionObjectType(ECC_CHESS);
 
 	SetRootComponent(PieceBase);
 	PieceTop->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);

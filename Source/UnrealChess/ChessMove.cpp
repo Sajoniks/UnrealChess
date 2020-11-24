@@ -9,7 +9,7 @@ FChessMove::FChessMove(const FTileCoord& From, const FTileCoord& To, const FChes
 	int32 CapturedCode = (Captured) ? Captured->GetCode() : 0;
 
 	Move = (
-		From.ToInt() |
+		(From.ToInt()) |
 		(To.ToInt() << 7) |
 		(CapturedCode << 14) |
 		(PromotedCode << 20) |

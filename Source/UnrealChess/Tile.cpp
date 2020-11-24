@@ -6,6 +6,8 @@
 #include "Chessboard.h"
 #include "Chess.h"
 
+#include "UnrealChess.h"
+
 // Sets default values
 ATile::ATile()
 {
@@ -13,6 +15,7 @@ ATile::ATile()
 	PrimaryActorTick.bCanEverTick = true;
 
 	TileMesh = CreateDefaultSubobject<UStaticMeshComponent>("Tile");
+	TileMesh->SetCollisionObjectType(ECC_TILE);
 	SetRootComponent(TileMesh);
 
 	ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprint/DT_TileMaterialAssets.DT_TileMaterialAssets'"));

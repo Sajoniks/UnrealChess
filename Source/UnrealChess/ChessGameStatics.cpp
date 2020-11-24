@@ -25,6 +25,11 @@ bool UChessGameStatics::IsCaptureMove(const FChessMove& Move)
 	return Move.GetCapturedPiece() != GEmptyChessPiece.GetCode();
 }
 
+bool UChessGameStatics::IsPromotionMove(const FChessMove& Move)
+{
+	return Move.GetPromotedPiece() != GEmptyChessPiece.GetCode();
+}
+
 int32 UChessGameStatics::GetTileIndexAt(EBoardFile File, EBoardRank Rank)
 {
 	return static_cast<int32>(File) + 21 + static_cast<int32>(Rank) * 10;

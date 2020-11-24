@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChessMove.h"
 
 /**
  * 
@@ -10,7 +11,7 @@
 struct UNREALCHESS_API FChessMoveRecord
 {	
 	//
-	int32 Move;
+	FChessMove Move;
 
 	//
 	int32 CastlePermission;

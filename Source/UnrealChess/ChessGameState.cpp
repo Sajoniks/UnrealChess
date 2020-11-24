@@ -362,6 +362,8 @@ void AChessGameState::GenerateAllMoves_Implementation()
 		{
 			UE_LOG(LogGameState, Display, TEXT("Generated moves on client"));
 		}
+
+		CheckKingState();
 	}
 }
 
@@ -512,9 +514,111 @@ void AChessGameState::MovePiece(const FTileCoord& From, const FTileCoord& To)
 	check(bFound);
 }
 
+//TODO add hashing
 void AChessGameState::TakeMove()
 {
-	//TODO 
+	FChessMoveRecord Record = History.Last();
+	FChessMove Move = Record.Move;
+
+	int32 FromIdx = Move.GetFrom().ToInt();
+	int32 ToIdx = Move.GetTo().ToInt();
+	
+	//Must be valid!
+	check(Move.GetFrom().IsValid() && Move.GetTo().IsValid())
+
+	//Revert back values
+	CastlePermission = Record.CastlePermission;
+	FiftyMoveCounter = Record.FiftyMove;
+	EnPassantTile = Record.EnPassantTile;
+
+	//Revert moving side
+	SetMovingSide(static_cast<EPieceColor>((int32)Side ^ 1));
+	int32 SideCode = (int32)Side;
+
+	//If was en passant move, revert captured pawn
+	if (Move.IsEnPassantMove())
+	{
+		if (Side == EPieceColor::White)
+		{
+			AddPiece(FTileCoord{ ToIdx - 10 }, GBlackPawn);
+		}
+		else
+		{
+			AddPiece(FTileCoord{ ToIdx + 10 }, GWhitePawn);
+		}
+	}
+	else if (Move.IsCastlingMove())
+	{
+		//If was castling move, revert rook position
+		switch(Move.GetTo().GetEnum())
+		{
+		case ETileCoord::C1:
+			MovePiece({ ETileCoord::D1 }, { ETileCoord::A1 });
+			break;
+
+		case ETileCoord::C8:
+			MovePiece({ ETileCoord::D8 }, { ETileCoord::A8 });
+			break;
+
+		case ETileCoord::G1:
+			MovePiece({ ETileCoord::F1 }, { ETileCoord::H1 });
+			break;
+
+		case ETileCoord::G8:
+			MovePiece({ ETileCoord::F8 }, { ETileCoord::H8 });
+			break;
+
+		default:
+
+			check(false && "Invalid castling move");
+			break;
+		}
+	}
+
+	//Revert moved piece
+	MovePiece(Move.GetTo(), Move.GetFrom());
+
+	//Update king position
+	if (Tiles[FromIdx].GetPiece().IsA(EChessPieceRole::King))
+	{
+		Kings[SideCode] = Move.GetFrom();
+	}
+
+	//If piece was captured, return it back to the board
+	if (UChessGameStatics::IsCaptureMove(Move))
+	{
+		FChessPiece Piece = FChessPiece::GetPieceFromCode(Move.GetCapturedPiece());
+		AddPiece(Move.GetTo(), Piece);
+	}
+
+	//If piece was promoted, remove it and return pawn back
+	if (UChessGameStatics::IsPromotionMove(Move))
+	{
+		FChessPiece Piece = FChessPiece::GetPieceFromCode(Move.GetPromotedPiece());
+		EPieceColor PromotedColor = Piece.GetColor();
+		
+		ClearPiece(Move.GetFrom());
+		AddPiece(Move.GetFrom(),
+			PromotedColor == EPieceColor::White ? GWhitePawn : GBlackPawn
+		);
+	}
+
+	//Delete history record
+	History.Pop();
+}
+
+void AChessGameState::CheckKingState()
+{
+	if (IsCheckMate())
+	{
+		UE_LOG(LogGameState, Warning, TEXT("Checkmate!"));
+		EndGame();
+	}
+	else if (IsCheck())
+	{
+		UE_LOG(LogGameState, Warning, TEXT("Check!"));
+		KingCheck.Broadcast(Side);
+	}
 }
 
 bool AChessGameState::MakeMove(const FChessMove& Move)
@@ -528,8 +632,15 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 	const FChessPiece Piece = Tiles[FromIdx].GetPiece();
 	check(Piece != GEmptyChessPiece);
 
-	FChessMoveRecord HistoryRecord{};
-	HistoryRecord.PosHashKey = PosHashKey;
+	FChessMoveRecord HistoryRecord {
+		Move,
+		CastlePermission,
+		EnPassantTile.Get(99),
+		FiftyMoveCounter,
+		PosHashKey
+	};
+
+	History.Push(HistoryRecord);
 
 
 	if (Move.IsEnPassantMove())
@@ -550,7 +661,7 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 		switch (To.GetPosition().GetEnum())
 		{
 		case ETileCoord::C1:
-			MovePiece({ETileCoord::A1}, {ETileCoord::B1});
+			MovePiece({ETileCoord::A1}, {ETileCoord::D1});
 			break;
 
 		case ETileCoord::C8:
@@ -562,7 +673,7 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 			break;
 
 		case ETileCoord::G8:
-			MovePiece({ETileCoord::H8}, {ETileCoord::H8});
+			MovePiece({ETileCoord::H8}, {ETileCoord::F8});
 			break;
 
 		default:
@@ -629,11 +740,11 @@ bool AChessGameState::MakeMove(const FChessMove& Move)
 	int32 SideCode = static_cast<int32>(Side);
 	SetMovingSide(static_cast<EPieceColor>(SideCode ^ 1));
 
-
 	if (IsTileAttacked(Kings[SideCode].GetFile(), Kings[SideCode].GetRank(), Side))
 	{
 		TakeMove();
-
+		MoveFailed.Broadcast(Side);
+		
 		UE_LOG(LogGameState, Warning, TEXT("King is attacked, reverting move"));
 
 		return false;
@@ -1100,6 +1211,60 @@ int32 AChessGameState::GetTileAs64(int32 Tile120)
 int32 AChessGameState::GetTileAs120(int32 Tile64)
 {
 	return Array64To120Converter[Tile64];
+}
+
+void AChessGameState::EndGame()
+{
+	bEnded = true;
+	KingCheckMate.Broadcast(Side);
+}
+
+bool AChessGameState::IsFinished() const
+{
+	return bEnded;
+}
+
+bool AChessGameState::IsCheck()
+{
+	int32 SideCode = (int32)Side;
+	EPieceColor TheirSide = static_cast<EPieceColor>(SideCode ^ 1);
+	
+	FTileCoord KingTile = Kings[SideCode];
+	
+	return (IsTileAttacked(KingTile.GetFile(), KingTile.GetRank(), TheirSide));
+}
+
+bool AChessGameState::IsCheckMate()
+{
+	if (IsCheck())
+	{
+		int32 SideCode = (int32)Side;
+		EPieceColor TheirSide = static_cast<EPieceColor>(SideCode ^ 1);
+		
+		FTileCoord KingTile = Kings[SideCode];
+
+		bool bCheckMate = true;
+		bool bAnyMove = false;
+		
+		for (auto&& Move : Moves)
+		{
+			if (Move.GetFrom() == KingTile)
+			{
+				bAnyMove = true;
+				
+				FTileCoord ToTile = Move.GetTo();
+				if (!IsTileAttacked(ToTile.GetFile(), ToTile.GetRank(), TheirSide))
+				{
+					bCheckMate = false;
+					break;
+				}
+			}
+		}
+
+		return bAnyMove && bCheckMate;
+	}
+
+	return false;
 }
 
 void AChessGameState::MakeBitMasks()

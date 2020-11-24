@@ -23,7 +23,6 @@ public:
 	static const int32 FLAG_CastlingMove = 0x1000000;
 	static const int32 FLAG_EnPassantMove = 0x40000;
 	static const int32 FLAG_PawnStartMove = 0x80000;
-	//static const int32 FLAG_PromotionMove = 0x1000000;
 
 	FChessMove() = default;
 
